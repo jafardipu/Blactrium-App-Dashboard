@@ -23,13 +23,13 @@ const ForgetPassForm = () => {
   const onFinish: FormProps<FieldType>["onFinish"] = async (values) => {
     try {
       const res = await forgetPassword(values).unwrap();
-      console.log(res?.data?.otp);
       if (res?.data?.token) {
         toast.success("An otp sent to your email, please verify it.");
         sessionStorage.setItem("otpToken", res?.data?.token);
         route.push("/verify-email");
       }
     } catch (error: any) {
+      console.log(error);
       Error_Modal({ title: error?.data?.message });
     }
   };

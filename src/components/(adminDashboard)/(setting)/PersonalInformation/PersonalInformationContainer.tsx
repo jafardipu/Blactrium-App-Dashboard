@@ -1,20 +1,19 @@
 "use client";;
 import { Button, ConfigProvider, Form, Input } from "antd";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { FaArrowLeft } from "react-icons/fa6";
 import { FiEdit } from "react-icons/fi";
 import profile from "@/assets/image/adminProfile.png";
 import { useState } from "react";
 import { Camera, Trash2 } from "lucide-react";
+import { useGetProfileQuery, useUpdateProfileMutation } from "@/redux/api/profileApi";
 
 const PersonalInformationContainer = () => {
-  const route = useRouter();
   const [form] = Form.useForm();
   const [edit, setEdit] = useState(false);
   const [fileName, setFileName] = useState<File | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
-
+  const {data, isLoading} = useGetProfileQuery(undefined);
+  const [updateProfile] = useUpdateProfileMutation();
 
   const handleProfileUpdate = async (values: {
     contact?: string;

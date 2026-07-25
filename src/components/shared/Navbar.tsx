@@ -10,13 +10,13 @@ import {
 } from "@/components/ui/menubar";
 import useGreeting from "@/hooks/useGreeting";
 import { cn } from "@/lib/utils";
-import { useGetProfileQuery } from "@/redux/api/userApi";
+import { useGetProfileQuery } from "@/redux/api/profileApi";
 import { TUser } from "@/types";
-import { Avatar, Badge, Flex } from "antd";
+import { Avatar, Flex } from "antd";
 import { ChevronRight, X } from "lucide-react";
 import Link from "next/link";
 import { FaBars } from "react-icons/fa6";
-import { IoNotificationsOutline } from "react-icons/io5";
+
 
 type TNavbarProps = {
   collapsed: boolean;
@@ -26,10 +26,10 @@ type TNavbarProps = {
 const Navbar = ({ collapsed, setCollapsed }: TNavbarProps) => {
   const greeting = useGreeting();
 
-  const { data, isLoading } = useGetProfileQuery([]);
-  const user = data?.data as TUser;
+  // const { data, isLoading } = useGetProfileQuery([]);
+  // const user = data?.data as TUser;
 
-  const notificationCount = user?._count?.notifications || 0;
+  // const notificationCount = user?._count?.notifications || 0;
 
   return (
     <div className='flex items-center justify-between w-[97%] font-poppins text-text-color xl:px-8 px-4'>
@@ -96,7 +96,7 @@ const Navbar = ({ collapsed, setCollapsed }: TNavbarProps) => {
                     collapsed && "hidden",
                   )}
                 >
-                  {user?.name}
+                  {/* {user?.name} */}
                 </h4>
               </div>
             </MenubarTrigger>

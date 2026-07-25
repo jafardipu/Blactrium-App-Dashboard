@@ -1,40 +1,8 @@
-"use client";
+"use client";;
 import { Tabs, TabsProps } from "antd";
 import PrivacyPolicyEditor from "./privacyPolicy/PrivacyPolicyEditor";
 import TermsConditionsEditor from "./TermsConditions/TermsConditionsEditor";
-import DisclaimerEditor from "./Disclaimer/DisclaimerEditor";
-import CommunityGuidelinesEditor from "./CommunityGuidelines/CommunityGuidelinesEditor";
-import AboutUsEditor from "./aboutUs/AboutUsEditor";
-// import ChangePasswordModal from "@/components/(adminDashboard)/(setting)/changePassword/ChangePasswordModal";
-// import Link from "next/link";
-// import { useState } from "react";
-// import { IoIosArrowForward } from "react-icons/io";
 
-// Import SVG icons for each setting item
-// import { FiMail, FiUser, FiLock, FiFileText, FiShield } from "react-icons/fi";
-
-// const links = [
-//   {
-//     label: "Personal Information",
-//     path: "admin/personal-information",
-//     icon: <FiUser size={24} className='text-white' />,
-//   },
-//   {
-//     label: "Change Password",
-//     path: "changePassword",
-//     icon: <FiLock size={24} className='text-white' />,
-//   },
-//   {
-//     label: "Terms & Condition",
-//     path: "admin/terms-condition",
-//     icon: <FiFileText size={24} className='text-white' />,
-//   },
-//   {
-//     label: "Privacy Policy",
-//     path: "admin/privacy-policy",
-//     icon: <FiShield size={24} className='text-white' />,
-//   },
-// ];
 
 const items: TabsProps['items'] = [
   {
@@ -46,36 +14,13 @@ const items: TabsProps['items'] = [
     key: '2',
     label: 'Terms & Conditions',
     children: <TermsConditionsEditor />,
-  },
-  // {
-  //   key: '3',
-  //   label: 'Disclaimer',
-  //   children: <DisclaimerEditor />,
-  // },
-  // // {
-  // //   key: '4',
-  // //   label: 'FAQ',
-  // //   children: 'Content of Tab Pane 4',
-  // // },
-  // {
-  //   key: '5',
-  //   label: 'Community Guidelines',
-  //   children: <CommunityGuidelinesEditor />,
-  // },
-  // {
-  //   key: '6',
-  //   label: 'About Us',
-  //   children: <AboutUsEditor />,
-  // }
+  }
 ];
 
 const SettingContainer = () => {
   // const [open, setOpen] = useState(false);
 
   return (
-    <div className="mt-2">
-      <Tabs defaultActiveKey="1" items={items} />
-    </div>
     // <div className='grid grid-cols-1 gap-6'>
     //   {links.map((link, inx) => {
     //     return (
@@ -107,6 +52,9 @@ const SettingContainer = () => {
     //   })}
     //   <ChangePasswordModal open={open} setOpen={setOpen} />
     // </div>
+    <div className="mt-2">
+      <Tabs defaultActiveKey="1" items={items} />
+    </div>
   );
 };
 

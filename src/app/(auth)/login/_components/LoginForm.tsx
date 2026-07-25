@@ -1,15 +1,11 @@
-"use client";
+"use client";;
 import AnimatedArrow from "@/components/animatedArrows/AnimatedArrow";
-import { Error_Modal, Success_model } from "@/lib/utils";
+import { Error_Modal } from "@/lib/utils";
 import { useLoginMutation } from "@/redux/api/authApi";
-import { setUser } from "@/redux/features/authSlice";
-import { useAppDispatch } from "@/redux/hooks";
 import type { FormProps } from "antd";
 import { Button, Checkbox, Form, Input, Flex } from "antd";
 import Link from "next/link";
-import { jwtDecode } from "jwt-decode";
 import { useRouter } from "next/navigation";
-import useFcmToken from "@/hooks/useFcmToken";
 import { toast } from "sonner";
 
 type FieldType = {
@@ -18,12 +14,8 @@ type FieldType = {
   remember?: string;
 };
 
-
-
 const LoginForm = () => {
-
   const [login, { isLoading }] = useLoginMutation();
-  // const { fcmToken } = useFcmToken();
   const router = useRouter();
 
   const onFinish: FormProps<FieldType>["onFinish"] = async (values) => {
@@ -38,6 +30,7 @@ const LoginForm = () => {
       router.push("/");
       toast.success("Login successful");
     } catch (error: any) {
+      console.log(error)
       Error_Modal({ title: error?.data?.message });
     }
   };
@@ -75,10 +68,10 @@ const LoginForm = () => {
         name="password"
         rules={[{ required: true, message: "Please input your password!" }]}
       >
-        <Input
+        <Input.Password
           type="password"
           size="large"
-          className="placeholder:!text-[#818181] placeholder:!text-sm"
+          className="placeholder:!text-[#818181] placeholder:!text-sm login-password"
           placeholder="Password"
         />
       </Form.Item>

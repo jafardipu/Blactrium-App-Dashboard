@@ -2,7 +2,7 @@
 import CustomToast from "@/components/shared/CustomToast";
 import useFcmToken from "@/hooks/useFcmToken";
 import { notificationApi } from "@/redux/api/notificationApi";
-import { useGetProfileQuery, useUpdateProfileMutation } from "@/redux/api/userApi";
+import { useGetProfileQuery, useUpdateProfileMutation } from "@/redux/api/profileApi";
 import { tagTypes } from "@/redux/tagTypes";
 import { TUser } from "@/types";
 import { getMessaging, onMessage } from "firebase/messaging";
@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { firebaseApp } from "../firebase/firebase";
 import { useAppDispatch } from "@/redux/hooks";
 const FirebaseProvider = ({ children }: { children: React.ReactNode }) => {
-  const [updateProfile] = useUpdateProfileMutation({});
+  const [updateProfile] = useUpdateProfileMutation();
   const { data, isLoading } = useGetProfileQuery([]);
   const dispatch = useAppDispatch();
   const user = data?.data as TUser;

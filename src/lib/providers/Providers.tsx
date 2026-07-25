@@ -14,11 +14,11 @@ const Providers = ({ children }: { children: ReactNode }) => {
     <Provider store={store}>
       <NextTopLoader color='#FCB806' />
       <PersistGate loading={null} persistor={persistor}>
-        <FirebaseProvider>
+        {/* <FirebaseProvider> */}
           <AntdRegistry>
             <ConfigProvider theme={antTheme}>{children}</ConfigProvider>
           </AntdRegistry>
-        </FirebaseProvider>
+        {/* </FirebaseProvider> */}
       </PersistGate>
     </Provider>
   );

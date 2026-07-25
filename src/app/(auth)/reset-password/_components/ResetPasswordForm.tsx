@@ -32,6 +32,7 @@ const ResetPasswordForm = () => {
       }).unwrap();
       if (res.success) {
         Success_model({ title: "Password reset successfully!!" });
+        sessionStorage.removeItem("otpToken");
         route.push("/login");
       }
     } catch (error: any) {

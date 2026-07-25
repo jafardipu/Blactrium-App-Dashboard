@@ -1,4 +1,5 @@
 "use client";
+import { useGetCategoriesQuery } from '@/redux/api/categories';
 import { Button, Input } from 'antd';
 import { Plus } from 'lucide-react';
 import Image from 'next/image'
@@ -82,6 +83,8 @@ const categoriesData = [
 
 export default function CategoriesContainer() {
     const router = useRouter();
+    const queries: Record<string, string | number> = {};
+    const {data, isLoading} = useGetCategoriesQuery(queries);
     return (
         <div>
             <div className='flex justify-between items-center mb-5'>

@@ -21,11 +21,11 @@ export const navLinks = [
     label: <Link href={"/admin/subscribe-email"}>Subscribe Email</Link>,
   },
 
-  {
-    key: "subscription",
-    icon: <Podcast size={18} />,
-    label: <Link href={"/admin/subscription"}>Subscriptions</Link>,
-  },
+  // {
+  //   key: "subscription",
+  //   icon: <Podcast size={18} />,
+  //   label: <Link href={"/admin/subscription"}>Subscriptions</Link>,
+  // },
   {
     key: "complains",
     icon: <CircleAlert size={18} />,

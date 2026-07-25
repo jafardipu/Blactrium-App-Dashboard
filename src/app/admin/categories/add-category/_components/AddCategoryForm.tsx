@@ -16,11 +16,13 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { X, Upload } from "lucide-react";
+import { useCreateCategoryMutation } from "@/redux/api/categories";
 
 export function AddCategoryForm() {
     const [preview, setPreview] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [dragActive, setDragActive] = useState(false);
+    const [addCategory, {isLoading: isAddCategoryLoading}] = useCreateCategoryMutation();
 
     const form = useForm<CategoryFormData>({
         // @ts-ignore
@@ -203,7 +205,7 @@ export function AddCategoryForm() {
                     <Button
                         type="submit"
                         disabled={isLoading}
-                        className="w-full bg-amber-500 hover:bg-amber-600 text-black rounded-full h-12 text-base font-medium"
+                        className="w-full bg-amber-500 hover:bg-amber-600 text-white rounded-full h-10 text-base font-medium"
                     >
                         {isLoading ? "Saving..." : "Save"}
                     </Button>

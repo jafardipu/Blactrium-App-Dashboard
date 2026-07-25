@@ -15,7 +15,6 @@ type TPropsType = {
 
 const ChangePasswordModal = ({ open, setOpen }: TPropsType) => {
   const [form] = Form.useForm();
-  const [openModal, setOpenModal] = useState(false);
 
   const router = useRouter();
   const [changePassword, { isLoading }] = useChangePasswordMutation();
@@ -27,7 +26,7 @@ const ChangePasswordModal = ({ open, setOpen }: TPropsType) => {
 
     try {
       await changePassword({
-        oldPassword: values?.oldPassword,
+        currentPassword: values?.oldPassword,
         newPassword: values?.newPassword,
       }).unwrap();
       Success_model({ title: "Password change successfully!!" });
@@ -50,18 +49,26 @@ const ChangePasswordModal = ({ open, setOpen }: TPropsType) => {
           minWidth: "max-content",
         }}
       >
-        <div className='py-14'>
+        <div className="py-10">
           <div
-            className='w-12 h-12 bg-main-color  absolute top-2 right-2 rounded-full cursor-pointer'
+            className="size-10 bg-main-color  absolute top-2 right-2 rounded-full cursor-pointer flex items-center justify-center"
             onClick={() => setOpen(false)}
           >
-            <RiCloseLargeLine size={18} color='#fff' className='absolute top-1/3 left-1/3' />
+            <RiCloseLargeLine
+              size={16}
+              color="#fff"
+              className=""
+            />
           </div>
 
           {/* header */}
           <div>
-            <h4 className=' text-2xl font-medium text-center'>Change Password</h4>
-            <p className='mt-1 text-center'>Your password must be 8-10 character long.</p>
+            <h4 className=" text-2xl font-medium text-center">
+              Change Password
+            </h4>
+            <p className="mt-1 text-center">
+              Your password must be 8-10 character long.
+            </p>
           </div>
 
           {/* form */}
@@ -83,7 +90,7 @@ const ChangePasswordModal = ({ open, setOpen }: TPropsType) => {
             <Form
               form={form}
               onFinish={handleSubmit}
-              layout='vertical'
+              layout="vertical"
               style={{
                 maxWidth: 500,
                 marginTop: "25px",
@@ -91,58 +98,53 @@ const ChangePasswordModal = ({ open, setOpen }: TPropsType) => {
             >
               {/*  input old password */}
               <Form.Item
-                label='Old Password'
-                name='oldPassword'
-                rules={[{ required: true, message: "Please Enter Old Password" }]}
+                label="Old Password"
+                name="oldPassword"
+                rules={[
+                  { required: true, message: "Please Enter Old Password" },
+                ]}
               >
                 <Input.Password
-                  size='large'
-                  className='text-white'
-                  placeholder='Enter old password '
+                  size="large"
+                  className="text-white"
+                  placeholder="Enter old password "
                 />
               </Form.Item>
 
               {/*  input  new Password*/}
               <Form.Item
-                label='New password'
-                name='newPassword'
-                rules={[{ required: true, message: "Please Enter New  Password" }]}
+                label="New password"
+                name="newPassword"
+                rules={[
+                  { required: true, message: "Please Enter New  Password" },
+                ]}
               >
                 <Input.Password
-                  size='large'
-                  className='text-white'
-                  placeholder='Set new password'
+                  size="large"
+                  className="text-white"
+                  placeholder="Set new password"
                 />
               </Form.Item>
 
               {/* input  confirm number  */}
               <Form.Item
-                label='Re-enter new password'
-                name='confirmPassword'
-                rules={[{ required: true, message: "Please Re-enter new password" }]}
+                label="Re-enter new password"
+                name="confirmPassword"
+                rules={[
+                  { required: true, message: "Please Re-enter new password" },
+                ]}
               >
                 <Input.Password
-                  size='large'
-                  className='text-white'
-                  placeholder='Re-enter new password'
+                  size="large"
+                  className="text-white"
+                  placeholder="Re-enter new password"
                 />
               </Form.Item>
-
-              {/*<p
-                onClick={() => {
-                  setOpen(false);
-                  setOpenModal(true);
-                }}
-                className='mb-5 font-medium cursor-pointer text-gray-600'
-              >
-                Forget password?
-              </p>*/}
-
               <Button
-                htmlType='submit'
-                size='large'
+                htmlType="submit"
+                size="large"
                 block
-                className='!py-6 border-main-color'
+                className="!py-6 border-main-color"
                 loading={isLoading}
               >
                 Update Password
@@ -151,8 +153,6 @@ const ChangePasswordModal = ({ open, setOpen }: TPropsType) => {
           </ConfigProvider>
         </div>
       </Modal>
-      {/* forget password Modal */}
-      {/*<ForgetPasswordModal open={openModal} setOpen={setOpenModal}></ForgetPasswordModal>*/}
     </>
   );
 };

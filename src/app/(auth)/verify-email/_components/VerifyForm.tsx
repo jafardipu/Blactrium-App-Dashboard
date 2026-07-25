@@ -51,8 +51,7 @@ const VerifyEmailForm = () => {
   // handle re-sen otp
   const handleResend = async () => {
     try {
-      const email = sessionStorage.getItem("email");
-      const res = await reSendOtp({ email }).unwrap();
+      const res = await reSendOtp({}).unwrap();
       sessionStorage.setItem("token", res?.data?.token);
       Success_model({ title: "An otp re-sent to your email" });
     } catch (error: any) {

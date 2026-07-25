@@ -6,7 +6,6 @@ import { TabsProps } from "antd/lib";
 import React from "react";
 
 
-
 const PersonalInformationPage = () => {
   const [open, setOpen] = React.useState(false);
 
