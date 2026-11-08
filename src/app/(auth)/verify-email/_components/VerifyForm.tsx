@@ -1,6 +1,7 @@
 "use client";
 import AnimatedArrow from "@/components/animatedArrows/AnimatedArrow";
-import { Error_Modal, Success_model } from "@/lib/utils";
+import { Success_model } from "@/lib/utils";
+import { handleApiError } from "@/utils/handleApiError";
 import {
   useResendOtpMutation,
   useVerifyOtpMutation,
@@ -37,8 +38,7 @@ const VerifyEmailForm = () => {
       // sessionStorage.removeItem("email");
       route.push("/reset-password");
     } catch (error) {
-      // @ts-expect-error: Ignoring TypeScript error due to inferred 'any' type for 'values' which is handled in the form submit logic
-      Error_Modal({ title: error?.data?.message });
+      handleApiError(error);
     }
   };
 
@@ -54,8 +54,8 @@ const VerifyEmailForm = () => {
       const res = await reSendOtp({}).unwrap();
       sessionStorage.setItem("token", res?.data?.token);
       Success_model({ title: "An otp re-sent to your email" });
-    } catch (error: any) {
-      Error_Modal({ title: error?.data?.message });
+    } catch (error) {
+      handleApiError(error);
     }
   };
 

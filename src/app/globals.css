@@ -186,6 +186,11 @@ tspan{
   fill: #ffffff !important;
 }
 
+/* ============================= empty related style ================================ */
+.ant-empty-description{
+  color: #ffffff !important;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -249,4 +254,27 @@ tspan{
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Thin scrollbar for user details modal */
+.user-details-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #FCB80666 transparent;
+}
+
+.user-details-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+.user-details-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.user-details-scroll::-webkit-scrollbar-thumb {
+  background: #FCB80666;
+  border-radius: 999px;
+}
+
+.user-details-scroll::-webkit-scrollbar-thumb:hover {
+  background: #FCB80699;
 }

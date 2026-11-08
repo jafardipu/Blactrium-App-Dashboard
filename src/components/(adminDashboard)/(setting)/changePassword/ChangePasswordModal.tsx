@@ -1,11 +1,10 @@
 import { Button, ConfigProvider, Form, Input, Modal } from "antd";
 import { RiCloseLargeLine } from "react-icons/ri";
-import ForgetPasswordModal from "./ForgetPasswordModal";
-import { useState } from "react";
 import { Error_Modal, Success_model } from "@/lib/utils";
-import { logout } from "@/redux/features/authSlice";
+import { handleApiError } from "@/utils/handleApiError";
 import { useAppDispatch } from "@/redux/hooks";
 import { useChangePasswordMutation } from "@/redux/api/authApi";
+import { performLogout } from "@/utils/logout";
 import { useRouter } from "next/navigation";
 
 type TPropsType = {
@@ -15,7 +14,6 @@ type TPropsType = {
 
 const ChangePasswordModal = ({ open, setOpen }: TPropsType) => {
   const [form] = Form.useForm();
-
   const router = useRouter();
   const [changePassword, { isLoading }] = useChangePasswordMutation();
   const dispatch = useAppDispatch();
@@ -30,11 +28,11 @@ const ChangePasswordModal = ({ open, setOpen }: TPropsType) => {
         newPassword: values?.newPassword,
       }).unwrap();
       Success_model({ title: "Password change successfully!!" });
-      dispatch(logout());
+      await performLogout(dispatch);
+      router.replace("/login");
       router.refresh();
-      router.push("/login");
-    } catch (error: any) {
-      Error_Modal(error?.data?.message);
+    } catch (error) {
+      handleApiError(error);
     }
   };
   return (

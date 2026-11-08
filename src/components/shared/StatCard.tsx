@@ -7,7 +7,7 @@ import CountUp from "react-countup";
 interface StatCardProps {
   title: string;
   value: string | number;
-  change: {
+  change?: {
     value: string;
     positive: boolean;
   };
@@ -15,9 +15,10 @@ interface StatCardProps {
   icon?: ReactNode;
   prefix?: string;
   suffix?: string;
+  decimals?: number;
 }
 
-export function StatCard({ title, value, className, icon, prefix, suffix }: StatCardProps) {
+export function StatCard({ title, value, className, icon, prefix, suffix, decimals = 0 }: StatCardProps) {
   return (
     <div className={cn("rounded-2xl p-6 flex flex-col gap-1 text-white", className)}>
       <h3 className='text-2xl  font-medium'>{title}</h3>
@@ -27,7 +28,10 @@ export function StatCard({ title, value, className, icon, prefix, suffix }: Stat
           <div className="flex items-center gap-0.5">
             <span className="text-xl" >{prefix}</span>
             <p className='text-xl font-medium'>
-              <CountUp end={typeof value === "string" ? parseInt(value) : value} />
+              <CountUp
+                end={typeof value === "string" ? Number(value) : value}
+                decimals={decimals}
+              />
             </p>
             <span className="text-xl">{suffix}</span>
           </div>

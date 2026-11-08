@@ -1,5 +1,6 @@
 "use client";;
-import { Error_Modal, Success_model } from "@/lib/utils";
+import { Success_model } from "@/lib/utils";
+import { handleApiError } from "@/utils/handleApiError";
 import { useGetSettingsQuery, useUpdateSettingsMutation } from "@/redux/api/settingsApi";
 import { TSettings } from "@/types";
 import { Button } from "antd";
@@ -39,9 +40,8 @@ const TermsConditionsEditor = () => {
       }).unwrap();
 
       Success_model({ title: "Settings updated successfully" });
-    } catch (error: any) {
-      console.log(error);
-      Error_Modal({ title: error?.data?.message });
+    } catch (error) {
+      handleApiError(error);
     }
   };
   useEffect(() => {

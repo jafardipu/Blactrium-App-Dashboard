@@ -247,3 +247,128 @@ export type TPromotion = {
   createdAt: string;
   updatedAt: string;
 };
+
+export type TDashboardOverview = {
+  totalActiveUsers: number;
+  totalBusinesses: number;
+  totalEarning: number;
+};
+
+export type TDashboardCategory = {
+  _id: string;
+  categoryName: string;
+  categoryImage: string;
+  subCategoryCount: number;
+};
+
+export type TDashboardNewUser = {
+  _id: string;
+  id: string;
+  firstName: string;
+  lastName: string;
+  joinDate: string;
+  status: string;
+  avatar: string;
+};
+
+export type TDashboardData = {
+  overview: TDashboardOverview;
+  platformAnalytics: number[];
+  categoryList: TDashboardCategory[];
+  newUsers: TDashboardNewUser[];
+};
+
+export type TProductCategory = {
+  _id: string;
+  id?: string;
+  categoryName: string;
+  status?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type TAdminUser = {
+  _id: string;
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: string;
+  joinDate: string;
+  status: string;
+  avatar?: string;
+};
+
+export type TAdminUserSocialLink = {
+  platform: string;
+  url: string;
+};
+
+export type TAdminUserDetails = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  name: string;
+  email: string;
+  phone?: string | null;
+  contactNumber?: string | null;
+  role: string;
+  status: string;
+  avatar?: string | null;
+  isVerified?: boolean;
+  isLegalTermsAccepted?: boolean;
+  isBusinessProfileSetup?: boolean;
+  subscribeToEmails?: boolean;
+  businessOwnerType?: string | null;
+  dateOfJoin?: string;
+  country?: {
+    id: string;
+    name: string;
+    code: string;
+    flag?: string;
+  } | null;
+  socialLinks?: TAdminUserSocialLink[];
+  profile?: {
+    profileCover?: string | null;
+    tagLine?: string | null;
+    bio?: string | null;
+    interest?: string[];
+    location?: {
+      lat?: number | null;
+      lng?: number | null;
+    };
+  } | null;
+  businessProfile?: {
+    id: string;
+    businessName: string;
+    businessOwnerType?: string;
+    businessType?: string;
+    category?: string;
+    subCategory?: string;
+    phone?: string;
+    website?: string;
+    tagLine?: string | null;
+    bio?: string | null;
+    status?: string;
+    socialLinks?: TAdminUserSocialLink[];
+    location?: {
+      lat?: number | null;
+      lng?: number | null;
+      address?: string[];
+      country?: string;
+    };
+    avatar?: string | null;
+    cover?: string | null;
+  } | null;
+  merchant?: unknown;
+  subscription?: {
+    id: string;
+    status: string;
+    planName: string;
+    planTier?: string;
+    isTrial?: boolean;
+    platform?: string;
+    purchasedAt?: string;
+    expiresAt?: string;
+  } | null;
+};

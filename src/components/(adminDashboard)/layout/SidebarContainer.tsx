@@ -1,9 +1,9 @@
 "use client";
 import logo from "@/assets/image/logo.png";
-import { cn, Success_model } from "@/lib/utils";
-import { logout } from "@/redux/features/authSlice";
+import { cn } from "@/lib/utils";
 import { useAppDispatch } from "@/redux/hooks";
 import { navLinks } from "@/utils/navLinks";
+import { performLogout } from "@/utils/logout";
 import { Menu, MenuProps } from "antd";
 import Sider from "antd/es/layout/Sider";
 import Image from "next/image";
@@ -14,18 +14,16 @@ import { useEffect, useState } from "react";
 const SidebarContainer = ({ collapsed }: { collapsed: boolean }) => {
   const [current, setCurrent] = useState("dashboard");
   const currentPath = usePathname();
-
-  const dispatch = useAppDispatch();
   const router = useRouter();
+  const dispatch = useAppDispatch();
 
-  const onClick: MenuProps["onClick"] = (e) => {
+  const onClick: MenuProps["onClick"] = async (e) => {
     setCurrent(e.key);
     if (e.key === "logout") {
-      dispatch(logout());
+      await performLogout(dispatch);
+      router.replace("/login");
       router.refresh();
-      router.push("/login");
-
-      Success_model({ title: "Logout successful" });
+      return;
     }
     localStorage.setItem("activeNav", e.key);
   };

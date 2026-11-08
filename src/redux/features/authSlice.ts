@@ -1,6 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { TUser } from "@/types";
+import {
+  ACCESS_TOKEN_COOKIE,
+  REFRESH_TOKEN_COOKIE,
+  setAuthCookies,
+} from "@/utils/authCookies";
 import { createSlice } from "@reduxjs/toolkit";
 import Cookies from "js-cookie";
 
@@ -18,26 +23,22 @@ const authSlice = createSlice({
     setUser: (state, action) => {
       const { user, token, refreshToken } = action.payload;
 
-      state.user = user;
+      state.user = user ?? state.user;
       state.token = token;
 
-      // Store token in Cookies for middleware authentication
-      Cookies.set("wolf-pack-access-token", token, { path: "/" });
-      Cookies.set("refresh-token", refreshToken, { path: "/" });
+      setAuthCookies(token, refreshToken);
     },
 
     logout: (state) => {
       state.user = null;
       state.token = null;
 
-      // Remove token from cookie
-      Cookies.remove("wolf-pack-access-token", { path: "/" });
-      Cookies.remove("refresh-token", { path: "/" });
+      Cookies.remove(ACCESS_TOKEN_COOKIE, { path: "/" });
+      Cookies.remove(REFRESH_TOKEN_COOKIE, { path: "/" });
     },
   },
 });
 
-// selectors
 export const selectUser = (state: any) => state.auth.user;
 export const selectToken = (state: any) => state.auth.token;
 

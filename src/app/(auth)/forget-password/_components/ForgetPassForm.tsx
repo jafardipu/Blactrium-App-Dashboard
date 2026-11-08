@@ -1,6 +1,6 @@
 "use client";
 import AnimatedArrow from "@/components/animatedArrows/AnimatedArrow";
-import { Error_Modal } from "@/lib/utils";
+import { handleApiError } from "@/utils/handleApiError";
 import { useForgetPassMutation } from "@/redux/api/authApi";
 import type { FormProps } from "antd";
 import { Button, Form, Input } from "antd";
@@ -28,9 +28,8 @@ const ForgetPassForm = () => {
         sessionStorage.setItem("otpToken", res?.data?.token);
         route.push("/verify-email");
       }
-    } catch (error: any) {
-      console.log(error);
-      Error_Modal({ title: error?.data?.message });
+    } catch (error) {
+      handleApiError(error);
     }
   };
 

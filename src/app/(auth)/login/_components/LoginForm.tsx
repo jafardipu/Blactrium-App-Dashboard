@@ -1,7 +1,9 @@
-"use client";;
+"use client";
 import AnimatedArrow from "@/components/animatedArrows/AnimatedArrow";
-import { Error_Modal } from "@/lib/utils";
+import { handleApiError } from "@/utils/handleApiError";
 import { useLoginMutation } from "@/redux/api/authApi";
+import { setUser } from "@/redux/features/authSlice";
+import { useAppDispatch } from "@/redux/hooks";
 import type { FormProps } from "antd";
 import { Button, Checkbox, Form, Input, Flex } from "antd";
 import Link from "next/link";
@@ -16,6 +18,7 @@ type FieldType = {
 
 const LoginForm = () => {
   const [login, { isLoading }] = useLoginMutation();
+  const dispatch = useAppDispatch();
   const router = useRouter();
 
   const onFinish: FormProps<FieldType>["onFinish"] = async (values) => {
@@ -25,13 +28,26 @@ const LoginForm = () => {
         password: values?.password,
         rememberMe: values?.remember,
       };
-      await login(userData).unwrap();
+      const res = await login(userData).unwrap();
+      const payload = res?.data ?? res;
+      const token = payload?.accessToken || payload?.token;
+      const refreshToken = payload?.refreshToken;
+      const user = payload?.user ?? null;
+
+      if (token) {
+        dispatch(
+          setUser({
+            user,
+            token,
+            refreshToken,
+          }),
+        );
+      }
 
       router.push("/");
       toast.success("Login successful");
-    } catch (error: any) {
-      console.log(error)
-      Error_Modal({ title: error?.data?.message });
+    } catch (error) {
+      handleApiError(error);
     }
   };
 

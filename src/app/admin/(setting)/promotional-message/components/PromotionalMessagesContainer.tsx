@@ -17,6 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
 import { cn, Error_Modal, Success_model } from "@/lib/utils";
+import { handleApiError } from "@/utils/handleApiError";
 import {
   useCreatePromotionalMessageMutation,
   useDeletePromotionMutation,
@@ -87,9 +88,8 @@ const PromotionalMessagesContainer = () => {
     try {
       await deletePromotion(id).unwrap();
       Success_model({ title: "Promotional message deleted successfully" });
-    } catch (error: any) {
-      console.log(error);
-      Error_Modal({ title: error?.data?.message });
+    } catch (error) {
+      handleApiError(error);
     }
   };
 
@@ -120,9 +120,8 @@ const PromotionalMessagesContainer = () => {
         specificEmails: [],
       });
       setEmailInput("");
-    } catch (error: any) {
-      console.log(error);
-      Error_Modal({ title: error?.data?.message });
+    } catch (error) {
+      handleApiError(error);
     }
   };
 

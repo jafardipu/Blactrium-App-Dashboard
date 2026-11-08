@@ -11,12 +11,15 @@ import {
 import useGreeting from "@/hooks/useGreeting";
 import { cn } from "@/lib/utils";
 import { useGetProfileQuery } from "@/redux/api/profileApi";
+import { useAppDispatch } from "@/redux/hooks";
 import { TUser } from "@/types";
+import { performLogout } from "@/utils/logout";
 import { Avatar, Flex } from "antd";
 import { ChevronRight, X } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { FaBars } from "react-icons/fa6";
-
 
 type TNavbarProps = {
   collapsed: boolean;
@@ -25,15 +28,28 @@ type TNavbarProps = {
 
 const Navbar = ({ collapsed, setCollapsed }: TNavbarProps) => {
   const greeting = useGreeting();
+  const dispatch = useAppDispatch();
+  const router = useRouter();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const { data } = useGetProfileQuery(undefined);
+  const user = data?.data as TUser | undefined;
 
-  // const { data, isLoading } = useGetProfileQuery([]);
-  // const user = data?.data as TUser;
+  const handleLogout = async (event?: Event) => {
+    event?.preventDefault();
+    event?.stopPropagation();
+    if (isLoggingOut) return;
 
-  // const notificationCount = user?._count?.notifications || 0;
+    setIsLoggingOut(true);
+    try {
+      await performLogout(dispatch);
+    } finally {
+      router.replace("/login");
+      router.refresh();
+    }
+  };
 
   return (
     <div className='flex items-center justify-between w-[97%] font-poppins text-text-color xl:px-8 px-4'>
-      {/* Header left side */}
       <Flex align='center' gap={20}>
         <button
           onClick={() => setCollapsed(collapsed ? false : true)}
@@ -49,54 +65,29 @@ const Navbar = ({ collapsed, setCollapsed }: TNavbarProps) => {
           <h2 className='text-lg  font-medium'>
             Dashboard
             <span className='block  text-sm font-normal'>
-              {greeting}, Alex Jr.
+              {greeting}, {user?.name || "Admin"}
             </span>
           </h2>
         </div>
       </Flex>
 
-      {/* Header right side */}
       <Flex align='center' gap={20}>
-        {/* Notification */}
-        {/* <Link href={"/admin/notifications"}>
-          <div className='flex justify-center items-center size-10  rounded-full cursor-pointer relative border border-main-color'>
-            <IoNotificationsOutline size={24} color='#AB9D6E' />
-
-            {notificationCount > 0 && (
-              <Badge
-                count={notificationCount}
-                style={{
-                  border: "none",
-                  boxShadow: "none",
-                  backgroundColor: "var(--color-main)",
-                  color: "#fff",
-                  position: "absolute",
-                  top: "-24px",
-                  right: "-16px",
-                  fontSize: "10px",
-                }}
-              ></Badge>
-            )}
-          </div>
-        </Link> */}
-
-        {/* user profile */}
         <Menubar className='py-8 border-none shadow-none px-0 border bg-transparent '>
           <MenubarMenu>
             <MenubarTrigger className='shadow-none px-0 bg-[#111827] data-[state=open]:bg-[#111827] active:bg-[#111827]'>
               <div className={cn("text-black flex items-center gap-x-1 cursor-pointer")}>
                 <Avatar
-                  src={"/user_image.jpg"}
+                  src={user?.profilePicture || "/user_image.jpg"}
                   size={40}
                   className='border border-main-color size-16'
-                ></Avatar>
+                />
                 <h4
                   className={cn(
                     "text-base font-medium truncate flex-1 text-white",
                     collapsed && "hidden",
                   )}
                 >
-                  {/* {user?.name} */}
+                  {user?.name}
                 </h4>
               </div>
             </MenubarTrigger>
@@ -110,9 +101,16 @@ const Navbar = ({ collapsed, setCollapsed }: TNavbarProps) => {
                 </MenubarItem>
               </Link>
               <MenubarSeparator />
-              <Link href={"/login"}>
-                <MenubarItem className='hover:bg-gray-100 cursor-pointer'>Logout</MenubarItem>
-              </Link>
+              <MenubarItem
+                className='hover:bg-gray-100 cursor-pointer'
+                disabled={isLoggingOut}
+                onSelect={(event) => {
+                  event.preventDefault();
+                  void handleLogout(event);
+                }}
+              >
+                {isLoggingOut ? "Logging out..." : "Logout"}
+              </MenubarItem>
             </MenubarContent>
           </MenubarMenu>
         </Menubar>

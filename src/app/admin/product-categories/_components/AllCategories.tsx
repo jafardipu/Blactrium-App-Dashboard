@@ -1,78 +1,100 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Trash2 } from 'lucide-react';
-
-interface Category {
-  id: string;
-  name: string;
-}
+import { useState } from "react";
+import { Trash2 } from "lucide-react";
+import { Empty, Popconfirm, Skeleton } from "antd";
+import { TProductCategory } from "@/types";
+import { useUpdateProductCategoryStatusMutation } from "@/redux/api/product-category";
+import { Success_model } from "@/lib/utils";
+import { handleApiError } from "@/utils/handleApiError";
 
 interface CategoryGridProps {
-  categories?: Category[];
-  onDelete?: (id: string) => void;
+  categories: TProductCategory[];
+  isLoading?: boolean;
 }
 
-export function AllCategories({
-  categories = [
-    { id: '1', name: 'Skatewear' },
-    { id: '2', name: 'Shoe' },
-    { id: '3', name: 'Shoe' },
-    { id: '4', name: 'Shoe' },
-    { id: '5', name: 'Skatewear' },
-    { id: '6', name: 'Shoe' },
-    { id: '7', name: 'Shoe' },
-    { id: '8', name: 'Shoe' },
-    { id: '9', name: 'Skatewear' },
-    { id: '10', name: 'Shoe' },
-    { id: '11', name: 'Shoe' },
-    { id: '12', name: 'Shoe' },
-    { id: '13', name: 'Skatewear' },
-    { id: '14', name: 'Shoe' },
-    { id: '15', name: 'Shoe' },
-    { id: '16', name: 'Shoe' },
-    { id: '17', name: 'Skatewear' },
-    { id: '18', name: 'Shoe' },
-    { id: '19', name: 'Shoe' },
-    { id: '20', name: 'Shoe' },
-  ],
-  onDelete = (id) => console.log(`Delete category: ${id}`),
-}: CategoryGridProps) {
-  const [hoveredId, setHoveredId] = useState<string | null>(null);
-  const [items, setItems] = useState<Category[]>(categories);
+export function AllCategories({ categories, isLoading = false }: CategoryGridProps) {
+  const [openConfirmId, setOpenConfirmId] = useState<string | null>(null);
+  const [updateStatus, { isLoading: isDeleting }] =
+    useUpdateProductCategoryStatusMutation();
 
-  const handleDelete = (id: string) => {
-    setItems(items.filter(item => item.id !== id));
-    onDelete(id);
+  const handleDelete = async (id: string) => {
+    try {
+      await updateStatus({
+        id,
+        data: { status: false },
+      }).unwrap();
+      Success_model({ title: "Category deleted successfully" });
+      setOpenConfirmId(null);
+    } catch (error) {
+      handleApiError(error);
+    }
   };
 
+  if (isLoading) {
+    return (
+      <div className='w-full bg-zinc-900 p-4 rounded-md'>
+        <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4'>
+          {Array.from({ length: 8 }).map((_, index) => (
+            <Skeleton.Button
+              key={index}
+              active
+              block
+              style={{ height: 48, borderRadius: 8 }}
+            />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (categories.length === 0) {
+    return (
+      <div className='w-full bg-zinc-900 p-10 rounded-md'>
+        <Empty description='No product categories found' />
+      </div>
+    );
+  }
+
   return (
-    <div className="w-full bg-zinc-900 p-4 rounded-md">
-      <div className="grid grid-cols-4 gap-4">
-        {items.map((category) => (
-          <div
-            key={category.id}
-            onMouseEnter={() => setHoveredId(category.id)}
-            onMouseLeave={() => setHoveredId(null)}
-            className="relative group"
-          >
-            <button
-              className="w-full px-4 py-3 bg-zinc-800 hover:bg-zinc-700 text-white rounded-md transition-colors duration-200 flex items-center justify-center text-sm font-medium"
-            >
-              {category.name}
-            </button>
-            
-            {hoveredId === category.id && (
-              <button
-                onClick={() => handleDelete(category.id)}
-                className="absolute -top-2 -right-2 bg-red-600 hover:bg-red-700 text-white rounded-full p-1.5 transition-colors duration-200 shadow-lg"
-                aria-label={`Delete ${category.name}`}
-              >
-                <Trash2 size={16} />
+    <div className='w-full bg-zinc-900 p-4 rounded-md'>
+      <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4'>
+        {categories.map((category) => {
+          const id = category._id || category.id || "";
+          const isConfirmOpen = openConfirmId === id;
+
+          return (
+            <div key={id} className='relative group'>
+              <button className='w-full px-4 py-3 bg-zinc-800 hover:bg-zinc-700 text-white rounded-md transition-colors duration-200 flex items-center justify-center text-sm font-medium'>
+                {category.categoryName}
               </button>
-            )}
-          </div>
-        ))}
+
+              <Popconfirm
+                title='Delete category'
+                description={`Are you sure you want to delete "${category.categoryName}"?`}
+                open={isConfirmOpen}
+                onOpenChange={(open) => setOpenConfirmId(open ? id : null)}
+                onConfirm={() => handleDelete(id)}
+                okText='Yes'
+                cancelText='No'
+                disabled={isDeleting}
+                placement='topRight'
+              >
+                <button
+                  type='button'
+                  className={`absolute -top-2 -right-2 bg-red-600 hover:bg-red-700 text-white rounded-full p-1.5 transition-opacity duration-200 shadow-lg ${
+                    isConfirmOpen
+                      ? "opacity-100"
+                      : "opacity-0 group-hover:opacity-100"
+                  }`}
+                  aria-label={`Delete ${category.categoryName}`}
+                >
+                  <Trash2 size={16} />
+                </button>
+              </Popconfirm>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

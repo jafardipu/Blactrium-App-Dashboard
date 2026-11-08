@@ -23,7 +23,7 @@ const nextConfig = {
     return [
       {
         source: "/api/:path*",
-        destination: "http://72.244.153.29:5080/api/:path*", // Proxy to Backend
+        destination: "http://10.10.28.21:5080/api/:path*", // Proxy to Backend
       },
     ];
   },

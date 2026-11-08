@@ -9,15 +9,25 @@ export const tagTypes = {
   categories: "categories",
   countries: "countries",
   productCategories: "productCategories",
+  settings: "settings",
+  setting: "setting",
+  promotion: "promotion",
+  dashboard: "dashboard",
 };
 
 export const tagTypesList = [
   tagTypes.otp,
   tagTypes.auth,
+  tagTypes.users,
+  tagTypes.user,
   tagTypes.notifications,
   tagTypes.notification,
   tagTypes.profile,
   tagTypes.categories,
   tagTypes.countries,
   tagTypes.productCategories,
+  tagTypes.settings,
+  tagTypes.setting,
+  tagTypes.promotion,
+  tagTypes.dashboard,
 ];

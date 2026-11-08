@@ -1,6 +1,7 @@
 "use client";
 
 import { Success_model } from "@/lib/utils";
+import { handleApiError } from "@/utils/handleApiError";
 import {
   useDeleteAllNotificationsMutation,
   useDeleteNotificationMutation,
@@ -43,7 +44,7 @@ const NotificationContainer = () => {
       await deleteNotification(id).unwrap();
       //refetch();
     } catch (err) {
-      console.error("Failed to delete notification", err);
+      handleApiError(err);
     }
   };
 
@@ -52,7 +53,7 @@ const NotificationContainer = () => {
       await deleteAllNotification(undefined).unwrap();
       Success_model({ title: "All notifications deleted successfully" });
     } catch (err) {
-      console.error("Failed to delete all notifications", err);
+      handleApiError(err);
     }
   };
   const testNotification = async () => {
@@ -60,7 +61,7 @@ const NotificationContainer = () => {
       await create(undefined).unwrap();
       //Success_model({ title: "All notifications deleted successfully" });
     } catch (err) {
-      console.error("Failed to delete all notifications", err);
+      handleApiError(err);
     }
   };
 
@@ -69,7 +70,7 @@ const NotificationContainer = () => {
       await seenNotification(undefined).unwrap();
       //Success_model({ title: "All notifications deleted successfully" });
     } catch (err) {
-      console.error("Failed to delete all notifications", err);
+      handleApiError(err);
     }
   };
 

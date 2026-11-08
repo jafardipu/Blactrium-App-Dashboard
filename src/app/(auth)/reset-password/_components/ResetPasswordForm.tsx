@@ -1,6 +1,7 @@
 "use client";
 import AnimatedArrow from "@/components/animatedArrows/AnimatedArrow";
-import { Error_Modal, Success_model } from "@/lib/utils";
+import { Success_model } from "@/lib/utils";
+import { handleApiError } from "@/utils/handleApiError";
 import { useReSetPasswordMutation } from "@/redux/api/authApi";
 import type { FormProps } from "antd";
 import { Button, Form, Input } from "antd";
@@ -35,8 +36,8 @@ const ResetPasswordForm = () => {
         sessionStorage.removeItem("otpToken");
         route.push("/login");
       }
-    } catch (error: any) {
-      Error_Modal(error?.data?.message);
+    } catch (error) {
+      handleApiError(error);
     }
   };
 

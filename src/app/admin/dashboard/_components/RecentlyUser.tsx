@@ -1,141 +1,182 @@
 "use client";
-import { Image, message, Popconfirm, TableProps } from "antd";
+import { Empty, Popconfirm, Skeleton, TableProps } from "antd";
 import UserDetails from "@/components/(adminDashboard)/user/UserDetails";
+import UserAvatar from "@/components/shared/UserAvatar";
 import DataTable from "@/utils/DataTable";
-import { ArrowDownNarrowWide, Eye } from "lucide-react";
+import { Eye, Trash2 } from "lucide-react";
 import moment from "moment";
 import { useState } from "react";
 import { CgUnblock } from "react-icons/cg";
-import Link from "next/link";
-
-type TUser = {
-  id: number;
-  name: string;
-  email: string;
-  date: string;
-  status: string;
-  type: string;
-};
-
-const data = Array.from({ length: 5 }, (_, index) => {
-  return {
-    id: index,
-    name: `Jane Cooper`,
-    email: `user${index}@example.com`,
-    date: "6 April, 2023",
-    status: "Active",
-    type: index % 2 === 0 ? "User" : "Business Owner",
-  };
-})
+import { useGetDashboardQuery } from "@/redux/api/dashboardApi";
+import { useUpdateUserStatusMutation } from "@/redux/api/usersApi";
+import { TDashboardData, TDashboardNewUser } from "@/types";
+import { Success_model, cn } from "@/lib/utils";
+import { handleApiError } from "@/utils/handleApiError";
 
 const RecentlyUser = () => {
   const [open, setOpen] = useState<boolean>(false);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const { data, isLoading } = useGetDashboardQuery(undefined);
+  const [updateUserStatus, { isLoading: isUpdatingStatus }] =
+    useUpdateUserStatusMutation();
+  const users = (data?.data as TDashboardData | undefined)?.newUsers ?? [];
 
-
-  const confirmBlock = async (user: TUser) => {
-    message.success("Blocked the user");
+  const handleStatusUpdate = async (
+    user: TDashboardNewUser,
+    status: "blocked" | "deleted" | "active",
+  ) => {
+    try {
+      const id = user.id || user._id;
+      await updateUserStatus({ id, status }).unwrap();
+      Success_model({
+        title:
+          status === "blocked"
+            ? `${user.firstName} blocked successfully`
+            : status === "active"
+              ? `${user.firstName} unblocked successfully`
+              : `${user.firstName} deleted successfully`,
+      });
+    } catch (error) {
+      handleApiError(error);
+    }
   };
 
-  const columns: TableProps<TUser>["columns"] = [
+  const columns: TableProps<TDashboardNewUser>["columns"] = [
     {
       title: "ID",
       dataIndex: "id",
-      //align: "center",
-      render: (text) => <p>#{text + 1}</p>,
+      render: (_text, _record, index) => <p>#{index + 1}</p>,
     },
     {
       title: "User",
-      dataIndex: "name",
-      //align: "center",
-      render: (text, record) => (
-        <div className='flex items-center gap-x-3'>
-          <Image
-            src={"/user_image.jpg"}
-            alt='profile-picture'
-            width={40}
-            height={40}
-            className='size-10 aspect-square object-cover rounded-full'
-          ></Image>
-          <p className='font-bold'>{text}</p>
-        </div>
-      ),
-    },
-    {
-      title: "Email",
-      dataIndex: "email",
-      //align: "center",
+      dataIndex: "firstName",
+      render: (_text, record) => {
+        const fullName = `${record.firstName ?? ""} ${record.lastName ?? ""}`.trim();
+
+        return (
+          <div className='flex items-center gap-x-3'>
+            <UserAvatar src={record.avatar} name={fullName || "User"} />
+            <p className='font-bold'>{fullName || "Unknown User"}</p>
+          </div>
+        );
+      },
     },
     {
       title: "Join Date",
-      dataIndex: "createdAt",
-      //align: "center",
+      dataIndex: "joinDate",
       render: (text) => <p>{moment(text).format("LL")}</p>,
-    },
-    {
-      title: "Type",
-      dataIndex: "type",
-      filterIcon: <ArrowDownNarrowWide color="#fff" />,
-      filters: [
-        {
-          text: "User",
-          value: "User",
-        },
-        {
-          text: "Business Owner",
-          value: "Business Owner",
-        },
-      ],
-      onFilter: (value, record) => record.type.indexOf(value as string) === 0,
-      //align: "center",
     },
     {
       title: "Status",
       dataIndex: "status",
-      //align: "center",
-      render: (text) => <p className="text-[#4BB54B]">{text}</p>,
+      render: (text: string) => (
+        <p
+          className={cn(
+            "capitalize font-medium",
+            text?.toLowerCase() === "active" && "text-[#4BB54B]",
+            text?.toLowerCase() === "blocked" && "text-[#FFA36E]",
+            text?.toLowerCase() === "deleted" && "text-[#FF4848]",
+          )}
+        >
+          {text}
+        </p>
+      ),
     },
-
     {
       title: "Action",
       dataIndex: "action",
-      //align: "center",
-      render: (text, record) => (
-        <div className='flex items-center gap-2'>
-          <Eye
-            size={22}
-            color='#78C0A8'
-            onClick={() => setOpen(true)}
-            className='cursor-pointer'
-          />
+      render: (_text, record) => {
+        const isBlocked = record.status?.toLowerCase() === "blocked";
+        const isDeleted = record.status?.toLowerCase() === "deleted";
 
-          <Popconfirm
-            title='Block the user'
-            description={`Are you sure to block this user?`}
-            onConfirm={() => confirmBlock(record)}
-            okText='Yes'
-            cancelText='No'
-          >
-            <CgUnblock
+        return (
+          <div className='flex items-center gap-2'>
+            <Eye
               size={22}
-              color={"red"}
+              color='#78C0A8'
+              onClick={() => {
+                setSelectedUserId(record.id || record._id);
+                setOpen(true);
+              }}
               className='cursor-pointer'
             />
-          </Popconfirm>
-        </div>
-      ),
+
+            {!isDeleted && (
+              <Popconfirm
+                title={isBlocked ? "Unblock the user" : "Block the user"}
+                description={
+                  isBlocked
+                    ? `Are you sure to unblock ${record.firstName}?`
+                    : `Are you sure to block ${record.firstName}?`
+                }
+                onConfirm={() =>
+                  handleStatusUpdate(record, isBlocked ? "active" : "blocked")
+                }
+                okText='Yes'
+                cancelText='No'
+                disabled={isUpdatingStatus}
+              >
+                <CgUnblock
+                  size={22}
+                  color={isBlocked ? "#4BB54B" : "red"}
+                  className={cn(
+                    "cursor-pointer",
+                    isUpdatingStatus && "opacity-50",
+                  )}
+                />
+              </Popconfirm>
+            )}
+
+            {!isDeleted && (
+              <Popconfirm
+                title='Delete the user'
+                description={`Are you sure to delete ${record.firstName}? This cannot be undone.`}
+                onConfirm={() => handleStatusUpdate(record, "deleted")}
+                okText='Yes'
+                cancelText='No'
+                disabled={isUpdatingStatus}
+              >
+                <Trash2
+                  size={20}
+                  color='#FF4848'
+                  className={cn(
+                    "cursor-pointer",
+                    isUpdatingStatus && "opacity-50",
+                  )}
+                />
+              </Popconfirm>
+            )}
+          </div>
+        );
+      },
     },
   ];
 
   return (
-    <div className="border border-[#FFFFFF33]/[0.2] rounded-t-xl">
-      <h4 className="text-xl font-semibold text-[#cad1d6] py-2 px-2">New users</h4>
+    <div className='border border-[#FFFFFF33]/[0.2] rounded-t-xl'>
+      <h4 className='text-xl font-semibold text-[#cad1d6] py-2 px-2'>New users</h4>
       <div className='rounded-2xl'>
-        <DataTable
-          columns={columns}
-          data={data}
-          pagination={false}
-        ></DataTable>
-        <UserDetails open={open} setOpen={setOpen}></UserDetails>
+        {isLoading ? (
+          <div className='p-4 space-y-3'>
+            {[1, 2, 3, 4, 5].map((item) => (
+              <Skeleton key={item} active avatar paragraph={{ rows: 1 }} />
+            ))}
+          </div>
+        ) : users.length === 0 ? (
+          <div className='py-10'>
+            <Empty description='No new users found' />
+          </div>
+        ) : (
+          <DataTable columns={columns} data={users} pagination={false} />
+        )}
+        <UserDetails
+          open={open}
+          setOpen={(value) => {
+            setOpen(value);
+            if (!value) setSelectedUserId(null);
+          }}
+          userId={selectedUserId}
+        />
       </div>
     </div>
   );
