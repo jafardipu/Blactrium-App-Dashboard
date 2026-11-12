@@ -1,15 +1,30 @@
-"use client";;
-import React from "react"
+"use client";
+
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { categoryFormSchema, type CategoryFormData } from "./schema";
 import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { useCreateSubCategoryMutation } from "@/redux/api/categories";
+import { handleApiError } from "@/utils/handleApiError";
+import { Success_model } from "@/lib/utils";
+import { useParams, useRouter } from "next/navigation";
 
 export function AddSubCategoryForm() {
+  const router = useRouter();
+  const params = useParams();
+  const categoryId = String(params?.id || "");
   const [isLoading, setIsLoading] = useState(false);
+  const [createSubCategory] = useCreateSubCategoryMutation();
 
   const form = useForm<CategoryFormData>({
     resolver: zodResolver(categoryFormSchema),
@@ -17,42 +32,40 @@ export function AddSubCategoryForm() {
   });
 
   const onSubmit = async (data: CategoryFormData) => {
+    if (!categoryId) return;
+
     try {
       setIsLoading(true);
-      console.log("Form data:", {
-        name: data.name,
-      });
-      
-      // Here you would typically send the data to your API
-      // const formData = new FormData();
-      // formData.append("name", data.name);
-      // formData.append("image", data.image);
-      // await fetch("/api/categories", { method: "POST", body: formData });
-      
-      alert("Category saved successfully!");
+
+      await createSubCategory({
+        subCategoryName: data.name,
+        categoryId,
+      }).unwrap();
+
+      Success_model({ title: "Sub category created successfully" });
       form.reset();
+      router.push(`/admin/categories/${categoryId}`);
     } catch (error) {
-      console.error("Error saving category:", error);
+      handleApiError(error);
     } finally {
       setIsLoading(false);
     }
   };
 
-
   return (
-    <div className=" text-white">
+    <div className='text-white'>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-6'>
           <FormField
             control={form.control}
-            name="name"
+            name='name'
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-white"> Sub Category  Name</FormLabel>
+                <FormLabel className='text-white'>Sub Category Name</FormLabel>
                 <FormControl>
                   <Input
-                    placeholder="Enter Sub category name"
-                    className="text-white placeholder:text-gray-400 py-5"
+                    placeholder='Enter Sub category name'
+                    className='text-white placeholder:text-gray-400 py-5'
                     {...field}
                   />
                 </FormControl>
@@ -62,9 +75,9 @@ export function AddSubCategoryForm() {
           />
 
           <Button
-            type="submit"
-            disabled={isLoading}
-            className="w-full bg-amber-500 hover:bg-amber-600 text-black rounded-full h-10 text-base font-medium"
+            type='submit'
+            disabled={isLoading || !categoryId}
+            className='w-full bg-amber-500 hover:bg-amber-600 text-black rounded-full h-10 text-base font-medium'
           >
             {isLoading ? "Saving..." : "Save"}
           </Button>

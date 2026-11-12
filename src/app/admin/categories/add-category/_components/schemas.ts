@@ -1,19 +1,43 @@
 import { z } from "zod";
 
+const getFile = (value: unknown): File | null => {
+  if (!value) return null;
+  if (value instanceof File) return value;
+  if (typeof FileList !== "undefined" && value instanceof FileList) {
+    return value[0] ?? null;
+  }
+  if (Array.isArray(value) && value[0] instanceof File) {
+    return value[0];
+  }
+  return null;
+};
+
 export const categoryFormSchema = z.object({
-  name: z.string().min(1, "Category name is required").min(2, "Category name must be at least 2 characters"),
+  name: z
+    .string()
+    .min(1, "Category name is required")
+    .min(2, "Category name must be at least 2 characters"),
   image: z
     .any()
-    .refine((files) => files?.length > 0, "Category image is required")
+    .refine((value) => !!getFile(value), "Category image is required")
     .refine(
-      (files) => files?.[0]?.size <= 5000000,
-      "Image size must be less than 5MB"
+      (value) => {
+        const file = getFile(value);
+        return !!file && file.size <= 5_000_000;
+      },
+      "Image size must be less than 5MB",
     )
     .refine(
-      (files) => ["image/jpeg", "image/png", "image/webp"].includes(files?.[0]?.type),
-      "Only JPG, PNG, and WebP images are allowed"
+      (value) => {
+        const file = getFile(value);
+        return (
+          !!file &&
+          ["image/jpeg", "image/png", "image/webp"].includes(file.type)
+        );
+      },
+      "Only JPG, PNG, and WebP images are allowed",
     )
-    .transform((files) => files[0] as File),
+    .transform((value) => getFile(value) as File),
 });
 
 export type CategoryFormData = z.infer<typeof categoryFormSchema>;

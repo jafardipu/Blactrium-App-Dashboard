@@ -13,6 +13,7 @@ export const tagTypes = {
   setting: "setting",
   promotion: "promotion",
   dashboard: "dashboard",
+  legal: "legal",
 };
 
 export const tagTypesList = [
@@ -30,4 +31,5 @@ export const tagTypesList = [
   tagTypes.setting,
   tagTypes.promotion,
   tagTypes.dashboard,
+  tagTypes.legal,
 ];

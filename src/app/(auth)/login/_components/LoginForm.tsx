@@ -34,15 +34,15 @@ const LoginForm = () => {
       const refreshToken = payload?.refreshToken;
       const user = payload?.user ?? null;
 
-      if (token) {
-        dispatch(
-          setUser({
-            user,
-            token,
-            refreshToken,
-          }),
-        );
-      }
+      // if (token) {
+      //   dispatch(
+      //     setUser({
+      //       user,
+      //       token,
+      //       refreshToken,
+      //     }),
+      //   );
+      // }
 
       router.push("/");
       toast.success("Login successful");

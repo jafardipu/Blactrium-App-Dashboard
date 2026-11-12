@@ -1,7 +1,7 @@
 import { RiDashboardHorizontalFill } from "react-icons/ri";
 import { GoPeople } from "react-icons/go";
 import Link from "next/link";
-import { Bell, ChartBarStacked, CircleAlert, Globe, Mail, Podcast, SquareStack, Wallet } from "lucide-react";
+import { Bell, BellDot, ChartBarStacked, CircleAlert, Globe, Mail, Podcast, SquareStack, Wallet } from "lucide-react";
 import { IoSettingsOutline } from "react-icons/io5";
 
 export const navLinks = [
@@ -53,8 +53,8 @@ export const navLinks = [
   },
   {
     key: "Custom Notifications",
-    icon: <Bell size={18} />,
-    label: <Link href={"/admin/custom-notifications"}>Custom Notifications</Link>,
+    icon: <BellDot size={18} />,
+    label: <Link href={"/admin/custom-notifications"}>Push Notifications</Link>,
   },
   {
     key: "settings",

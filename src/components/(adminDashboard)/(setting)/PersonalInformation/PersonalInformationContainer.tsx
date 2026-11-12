@@ -1,47 +1,128 @@
-"use client";;
-import { Button, ConfigProvider, Form, Input } from "antd";
+"use client";
+
+import { Button, ConfigProvider, Form, Input, Skeleton } from "antd";
 import Image from "next/image";
 import { FiEdit } from "react-icons/fi";
-import profile from "@/assets/image/adminProfile.png";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Camera, Trash2 } from "lucide-react";
 import { useGetProfileQuery, useUpdateProfileMutation } from "@/redux/api/profileApi";
+import { TAdminProfile } from "@/types";
+import { getNameInitials } from "@/components/shared/UserAvatar";
+import { handleUpload } from "@/utils/handleUpload";
+import { handleApiError } from "@/utils/handleApiError";
+import { Success_model } from "@/lib/utils";
+
+type ProfileFormValues = {
+  firstName: string;
+  lastName: string;
+  email?: string;
+  phone?: string;
+};
 
 const PersonalInformationContainer = () => {
-  const [form] = Form.useForm();
+  const [form] = Form.useForm<ProfileFormValues>();
   const [edit, setEdit] = useState(false);
-  const [fileName, setFileName] = useState<File | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const {data, isLoading} = useGetProfileQuery(undefined);
+  const [avatarError, setAvatarError] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const { data, isLoading } = useGetProfileQuery(undefined);
   const [updateProfile] = useUpdateProfileMutation();
+  const user = data?.data as TAdminProfile | undefined;
 
-  const handleProfileUpdate = async (values: {
-    contact?: string;
-    email?: string;
-    first_name?: string;
-    last_name?: string;
-  }) => {
-    console.log("")
+  const firstName = user?.firstName || "Admin";
+  const displayAvatar = imageUrl || user?.profileAvatar || null;
+  const showAvatarImage = Boolean(displayAvatar) && !avatarError;
+
+  useEffect(() => {
+    setAvatarError(false);
+  }, [displayAvatar]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    form.setFieldsValue({
+      firstName: user.firstName || "",
+      lastName: user.lastName || "",
+      email: user.email || "",
+      phone: user.phone || "",
+    });
+  }, [user, form]);
+
+  const clearSelectedImage = () => {
+    if (imageUrl?.startsWith("blob:")) {
+      URL.revokeObjectURL(imageUrl);
+    }
+    setSelectedFile(null);
+    setImageUrl(null);
+  };
+
+  const handleProfileUpdate = async (values: ProfileFormValues) => {
+    if (!user) return;
+
+    try {
+      setIsSaving(true);
+
+      let profileAvatar = user.profileAvatar || undefined;
+      if (selectedFile) {
+        profileAvatar = await handleUpload(selectedFile);
+      }
+
+      const body: {
+        firstName: string;
+        lastName: string;
+        phone: string;
+        country: string;
+        interest: string[];
+        profileAvatar?: string;
+      } = {
+        firstName: values.firstName.trim(),
+        lastName: values.lastName.trim(),
+        phone: (values.phone || "").trim(),
+        country: user.countryId?.countryCode || "",
+        interest: user.interest || [],
+      };
+
+      if (profileAvatar) {
+        body.profileAvatar = profileAvatar;
+      }
+
+      await updateProfile(body).unwrap();
+      Success_model({ title: "Profile updated successfully" });
+      clearSelectedImage();
+      setEdit(false);
+    } catch (error) {
+      handleApiError(error);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const input = event.target;
-
     const file = input.files?.[0];
-    console.log(file);
 
     if (file) {
-      const url = URL.createObjectURL(file);
-      setImageUrl(url);
-      setFileName(file);
+      if (imageUrl?.startsWith("blob:")) {
+        URL.revokeObjectURL(imageUrl);
+      }
+      setAvatarError(false);
+      setImageUrl(URL.createObjectURL(file));
+      setSelectedFile(file);
     } else {
-      setImageUrl(null);
-      setFileName(null);
+      clearSelectedImage();
     }
 
     input.value = "";
   };
 
+  if (isLoading) {
+    return (
+      <div className='mt-10 flex justify-center'>
+        <Skeleton active avatar paragraph={{ rows: 4 }} />
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -65,67 +146,68 @@ const PersonalInformationContainer = () => {
       </div>
       <hr className='my-4' />
 
-      {/* personal information */}
-      <div className='mt-10 flex justify-center flex-col xl:flex-row items-center  gap-10'>
-        <div className='bg-primary-light-gray h-[365px] md:w-[350px] rounded-xl border border-main-color flex justify-center items-center  text-text-color'>
-          <div className='space-y-1 relative'>
-            <div className='relative group'>
-              {imageUrl ? (
+      <div className='mt-10 flex justify-center flex-col xl:flex-row items-center gap-10'>
+        <div className='bg-primary-light-gray h-[365px] md:w-[350px] rounded-xl border border-main-color flex justify-center items-center text-text-color px-4'>
+          <div className='flex flex-col items-center gap-3 w-full'>
+            <div className='relative size-36 shrink-0 group'>
+              {showAvatarImage ? (
                 <Image
-                  src={imageUrl}
-                  alt='adminProfile'
+                  src={displayAvatar as string}
+                  alt={firstName}
                   width={1200}
                   height={1200}
-                  className='size-36 rounded-full flex justify-center items-center object-cover'
-                ></Image>
+                  className='size-36 rounded-full object-cover'
+                  onError={() => setAvatarError(true)}
+                />
               ) : (
-                <Image
-                  src={profile}
-                  alt='adminProfile'
-                  width={1200}
-                  height={1200}
-                  className='size-36 rounded-full flex justify-center items-center object-cover'
-                ></Image>
-              )}
-
-              {/* cancel button */}
-              {fileName && imageUrl && (
-                <div
-                  className='absolute left-4 top-2 cursor-pointer rounded-md bg-primary-pink opacity-0 duration-1000 group-hover:opacity-100'
-                  onClick={() => {
-                    setFileName(null);
-                    setImageUrl(null);
-                  }}
-                >
-                  <Trash2 size={20} color='red' />
+                <div className='size-36 rounded-full bg-[#FCB806]/20 text-[#FCB806] flex items-center justify-center text-3xl font-semibold'>
+                  {getNameInitials(firstName)}
                 </div>
               )}
-              {/* upload image */}
+
+              {selectedFile && imageUrl ? (
+                <button
+                  type='button'
+                  className='absolute left-2 top-2 cursor-pointer rounded-md bg-white/90 p-1 opacity-0 duration-300 group-hover:opacity-100'
+                  onClick={clearSelectedImage}
+                >
+                  <Trash2 size={18} color='red' />
+                </button>
+              ) : null}
+
               <input
                 type='file'
                 id='fileInput'
                 className='hidden'
                 onChange={handleFileChange}
                 accept='image/*'
+                disabled={!edit}
               />
-              {/* upload button */}
-              <label htmlFor='fileInput' className='flex cursor-pointer flex-col items-center'>
-                <div className='bg-white text-black text-lg p-1 rounded-full  absolute bottom-0 right-3'>
-                  <Camera size={20} />
-                </div>
-              </label>
+
+              {edit ? (
+                <label
+                  htmlFor='fileInput'
+                  className='absolute bottom-1 right-1 cursor-pointer z-10'
+                >
+                  <div className='bg-white text-black p-2 rounded-full shadow-md hover:bg-gray-100 transition-colors'>
+                    <Camera size={18} />
+                  </div>
+                </label>
+              ) : null}
             </div>
-            <h3 className='text-2xl text-center'>{"Alex Jr."}</h3>
+            <h3 className='text-2xl text-center max-w-full truncate px-2'>{firstName}</h3>
           </div>
         </div>
-        {/* form */}
+
         <div className='w-2/4'>
           <ConfigProvider
             theme={{
               components: {
                 Input: {
                   colorBgContainer: "var(--color-primary-light-gray)",
+                  colorBgContainerDisabled: "var(--color-primary-light-gray)",
                   colorText: "#fff",
+                  colorTextDisabled: "#fff",
                   colorTextPlaceholder: "#000",
                 },
                 Form: {
@@ -138,51 +220,51 @@ const PersonalInformationContainer = () => {
               form={form}
               onFinish={handleProfileUpdate}
               layout='vertical'
-              style={{
-                marginTop: "25px",
-              }}
-              key={"1"}
-              initialValues={{
-                name: "Alex Jr.",
-                email: "alex.jr@com",
-                phoneNumber: "+1 123 456 7890",
-              }}
+              style={{ marginTop: "25px" }}
             >
-              {/*  input  name */}
-              <Form.Item label='Name' name='name'>
-                {edit ? (
-                  <Input size='large' placeholder='Enter full name '></Input>
-                ) : (
-                  <Input size='large' placeholder='Enter full name ' readOnly></Input>
-                )}
+              <Form.Item
+                label='First Name'
+                name='firstName'
+                rules={[{ required: true, message: "First name is required" }]}
+              >
+                <Input size='large' placeholder='Enter first name' readOnly={!edit} />
               </Form.Item>
 
-              {/*  input  email */}
+              <Form.Item
+                label='Last Name'
+                name='lastName'
+                rules={[{ required: true, message: "Last name is required" }]}
+              >
+                <Input size='large' placeholder='Enter last name' readOnly={!edit} />
+              </Form.Item>
+
               <Form.Item label='Email' name='email'>
-                {edit ? (
-                  <Input size='large' placeholder='Enter email' readOnly></Input>
-                ) : (
-                  <Input size='large' placeholder='Enter email' readOnly></Input>
-                )}
+                <Input
+                  size='large'
+                  placeholder='Enter email'
+                  disabled
+                  className='!cursor-not-allowed !text-white !bg-[var(--color-primary-light-gray)] disabled:!bg-[var(--color-primary-light-gray)] disabled:!text-white'
+                  style={{
+                    cursor: "not-allowed",
+                    color: "#fff",
+                    backgroundColor: "var(--color-primary-light-gray)",
+                  }}
+                />
               </Form.Item>
 
-              {/* input  phone number  */}
-              <Form.Item label='Phone Number' name='phoneNumber'>
-                {edit ? (
-                  <Input size='large' placeholder='Enter Phone number'></Input>
-                ) : (
-                  <Input size='large' placeholder='Enter Phone number' readOnly></Input>
-                )}
+              <Form.Item label='Phone Number' name='phone'>
+                <Input size='large' placeholder='Enter phone number' readOnly={!edit} />
               </Form.Item>
 
               <div className={edit ? "" : "hidden"}>
                 <Button
                   htmlType='submit'
                   size='large'
+                  loading={isSaving}
+                  disabled={isSaving}
                   className='w-full hover:!bg-[#FCB806]/90 hover:!text-white'
                   block
                   style={{ border: "none" }}
-                  onClick={() => setEdit(false)}
                 >
                   Save Change
                 </Button>

@@ -167,6 +167,17 @@ export type TSettings = {
   about: string;
 };
 
+export type TLegalContentType = "privacy" | "terms" | "about" | "mission";
+
+export type TLegal = {
+  _id: string;
+  contentType: TLegalContentType;
+  title: string;
+  content: string;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
 export type TNotification = {
   id: string;
   userId: string;
@@ -297,6 +308,67 @@ export type TAdminUser = {
   joinDate: string;
   status: string;
   avatar?: string;
+};
+
+export type TAdminProfile = {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  businessName?: string | null;
+  email: string;
+  phone?: string | null;
+  profileAvatar?: string | null;
+  profileCover?: string | null;
+  countryId?: {
+    _id: string;
+    countryName: string;
+    countryCode: string;
+    status: boolean;
+  } | null;
+  interest?: string[];
+  role: string;
+  businessProfileStatus?: string;
+  businessProfileId?: string | null;
+  subscribeToEmails?: boolean;
+  isSubscribe?: boolean;
+  isSubscribed?: boolean;
+  emailUpdates?: boolean;
+  fcmToken?: string | null;
+};
+
+export type TCountry = {
+  _id: string;
+  countryName: string;
+  countryCode: string;
+  status: boolean;
+  role?: string[];
+  flag?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type TCategory = {
+  _id: string;
+  categoryName: string;
+  categoryImage: string;
+  isPopular?: boolean;
+  status?: boolean;
+  subCategoryCount?: number;
+  businessCount?: number;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type TSubCategory = {
+  _id: string;
+  categoryId: {
+    _id: string;
+    categoryName: string;
+  };
+  subCategoryName: string;
+  status: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 };
 
 export type TAdminUserSocialLink = {

@@ -12,9 +12,10 @@ import useGreeting from "@/hooks/useGreeting";
 import { cn } from "@/lib/utils";
 import { useGetProfileQuery } from "@/redux/api/profileApi";
 import { useAppDispatch } from "@/redux/hooks";
-import { TUser } from "@/types";
+import { TAdminProfile } from "@/types";
 import { performLogout } from "@/utils/logout";
-import { Avatar, Flex } from "antd";
+import UserAvatar from "@/components/shared/UserAvatar";
+import { Flex } from "antd";
 import { ChevronRight, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -32,7 +33,9 @@ const Navbar = ({ collapsed, setCollapsed }: TNavbarProps) => {
   const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const { data } = useGetProfileQuery(undefined);
-  const user = data?.data as TUser | undefined;
+  const user = data?.data as TAdminProfile | undefined;
+  const firstName = user?.firstName || "Admin";
+  const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(" ") || "Admin";
 
   const handleLogout = async (event?: Event) => {
     event?.preventDefault();
@@ -65,7 +68,7 @@ const Navbar = ({ collapsed, setCollapsed }: TNavbarProps) => {
           <h2 className='text-lg  font-medium'>
             Dashboard
             <span className='block  text-sm font-normal'>
-              {greeting}, {user?.name || "Admin"}
+              {greeting}, {fullName}
             </span>
           </h2>
         </div>
@@ -75,11 +78,11 @@ const Navbar = ({ collapsed, setCollapsed }: TNavbarProps) => {
         <Menubar className='py-8 border-none shadow-none px-0 border bg-transparent '>
           <MenubarMenu>
             <MenubarTrigger className='shadow-none px-0 bg-[#111827] data-[state=open]:bg-[#111827] active:bg-[#111827]'>
-              <div className={cn("text-black flex items-center gap-x-1 cursor-pointer")}>
-                <Avatar
-                  src={user?.profilePicture || "/user_image.jpg"}
-                  size={40}
-                  className='border border-main-color size-16'
+              <div className={cn("text-black flex items-center gap-x-2 cursor-pointer")}>
+                <UserAvatar
+                  src={user?.profileAvatar}
+                  name={firstName}
+                  className='size-10 border border-main-color'
                 />
                 <h4
                   className={cn(
@@ -87,7 +90,7 @@ const Navbar = ({ collapsed, setCollapsed }: TNavbarProps) => {
                     collapsed && "hidden",
                   )}
                 >
-                  {user?.name}
+                  {firstName}
                 </h4>
               </div>
             </MenubarTrigger>

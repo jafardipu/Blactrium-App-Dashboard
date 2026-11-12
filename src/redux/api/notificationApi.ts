@@ -48,6 +48,18 @@ const settingsApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: [tagTypes.notification],
     }),
+    sendCustomNotification: builder.mutation({
+      query: (data: {
+        title: string;
+        description: string;
+        targetType: "user" | "business-owner";
+      }) => ({
+        url: "/admin/notification/custom",
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: [tagTypes.notification],
+    }),
   }),
 });
 export const {
@@ -56,6 +68,7 @@ export const {
   useDeleteNotificationMutation,
   useDeleteAllNotificationsMutation,
   useTestNotificationMutation,
+  useSendCustomNotificationMutation,
 } = settingsApi;
 
 export const notificationApi = settingsApi;

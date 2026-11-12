@@ -11,7 +11,14 @@ const profileApi = baseApi.injectEndpoints({
             providesTags: [tagTypes.profile],
         }),
         updateProfile: build.mutation({
-            query: (data) => ({
+            query: (data: {
+                firstName: string;
+                lastName: string;
+                phone?: string;
+                profileAvatar?: string;
+                country?: string;
+                interest?: string[];
+            }) => ({
                 url: `/admin/profile`,
                 method: "PATCH",
                 body: data,

@@ -20,6 +20,7 @@ export default function PaginationSection({
         current={current}
         total={total}
         pageSize={pageSize}
+        showSizeChanger={false}
         onChange={(page) => updateParams({ page: page.toString() })}
       />
     </div>

@@ -4,7 +4,7 @@ import { baseApi } from "./baseApi";
 const categoriesApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     createCategory: builder.mutation({
-      query: (data) => ({
+      query: (data: { categoryName: string; categoryImage: string }) => ({
         url: "/admin/category",
         method: "POST",
         body: data,
@@ -12,7 +12,7 @@ const categoriesApi = baseApi.injectEndpoints({
       invalidatesTags: [tagTypes.categories],
     }),
     createSubCategory: builder.mutation({
-      query: (data) => ({
+      query: (data: { subCategoryName: string; categoryId: string }) => ({
         url: "/admin/subcategory",
         method: "POST",
         body: data,
@@ -36,22 +36,29 @@ const categoriesApi = baseApi.injectEndpoints({
       providesTags: [tagTypes.categories],
     }),
     updateCategory: builder.mutation({
-      query: (data) => ({
-        url: `/admin/category/${data.id}`,
+      query: ({ id, ...body }: { id: string; status?: boolean; categoryName?: string; categoryImage?: string }) => ({
+        url: `/admin/category/${id}`,
         method: "PATCH",
-        body: data,
+        body,
       }),
       invalidatesTags: [tagTypes.categories],
     }),
     updateSubCategory: builder.mutation({
-      query: (data) => ({
-        url: `/admin/subcategory/${data.id}`,
+      query: ({ id, ...body }: { id: string; [key: string]: unknown }) => ({
+        url: `/admin/subcategory/${id}`,
         method: "PATCH",
-        body: data,
+        body,
       }),
       invalidatesTags: [tagTypes.categories],
     }),
   }),
 });
 
-export const { useCreateCategoryMutation, useCreateSubCategoryMutation, useGetCategoriesQuery, useGetSubCategoriesQuery, useUpdateCategoryMutation, useUpdateSubCategoryMutation } = categoriesApi;
+export const {
+  useCreateCategoryMutation,
+  useCreateSubCategoryMutation,
+  useGetCategoriesQuery,
+  useGetSubCategoriesQuery,
+  useUpdateCategoryMutation,
+  useUpdateSubCategoryMutation,
+} = categoriesApi;

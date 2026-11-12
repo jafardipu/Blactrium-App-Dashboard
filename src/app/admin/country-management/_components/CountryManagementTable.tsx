@@ -1,65 +1,102 @@
-"use client";;
-import { message, Switch, TableProps } from "antd";
-import UserDetails from "@/components/(adminDashboard)/user/UserDetails";
+"use client";
+
+import { useUpdateCountryStatusMutation } from "@/redux/api/country";
+import { TCountry } from "@/types";
+import { Success_model } from "@/lib/utils";
+import { handleApiError } from "@/utils/handleApiError";
 import DataTable from "@/utils/DataTable";
+import { Switch, TableProps } from "antd";
 import { useState } from "react";
 
-type TUser = {
-    id: number;
-    country: string;
-    code: string;
-    status: string;
-};
+type CountryRow = TCountry & { id: string };
 
-const data = Array.from({ length: 10 }, (_, index) => {
-    return {
-        id: index,
-        country: index % 2 === 0 ? "United Kingdom" : `United States`,
-        code: index % 2 === 0 ? `UK` : `US`,
-        status: "Active",
-    };
-})
+function CountryFlag({ src, alt }: { src?: string | null; alt: string }) {
+  const [failed, setFailed] = useState(false);
 
-const CountryManagementTable = () => {
-    const [open, setOpen] = useState<boolean>(false);
+  if (!src || failed) {
+    return <div className='h-6 w-9 rounded bg-[#D1D5DB]' aria-label={alt} />;
+  }
 
-    const columns: TableProps<TUser>["columns"] = [
-        {
-            title: "COUNTRY",
-            dataIndex: "country",
-           
-        },
-        {
-            title: "CODE",
-            dataIndex: "code",
-        },
-        {
-            title: "Status",
-            dataIndex: "status",
-            render: (text) => <p className="text-[#4BB54B]">{text}</p>,
-        },
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={src}
+      alt={alt}
+      className='h-6 w-9 rounded object-contain bg-[#1f2937]'
+      onError={() => setFailed(true)}
+    />
+  );
+}
 
-        {
-            title: "Action",
-            dataIndex: "action",
-            render: (text, record) => (
-                <Switch defaultChecked  />
-            ),
-        },
-    ];
+export default function CountryManagementTable({
+  countries,
+  loading = false,
+}: {
+  countries: TCountry[];
+  loading?: boolean;
+}) {
+  const [updateCountryStatus] = useUpdateCountryStatusMutation();
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
 
-    return (
-        <div className="border border-[#FFFFFF33]/[0.2] rounded-xl">
-            <div className='rounded-2xl'>
-                <DataTable
-                    columns={columns}
-                    data={data}
-                    pagination={true}
-                ></DataTable>
-                <UserDetails open={open} setOpen={setOpen}></UserDetails>
-            </div>
+  const handleStatusChange = async (country: TCountry, status: boolean) => {
+    try {
+      setUpdatingId(country._id);
+      await updateCountryStatus({
+        id: country._id,
+        status,
+      }).unwrap();
+      // Success_model({
+      //   title: status ? "Country activated" : "Country deactivated",
+      // });
+    } catch (error) {
+      handleApiError(error);
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
+  const rows: CountryRow[] = countries.map((country) => ({
+    ...country,
+    id: country._id,
+  }));
+
+  const columns: TableProps<CountryRow>["columns"] = [
+    {
+      title: "COUNTRY",
+      dataIndex: "countryName",
+      render: (_, record) => (
+        <div className='flex items-center gap-3'>
+          <CountryFlag src={record.flag} alt={record.countryName} />
+          <span>{record.countryName}</span>
         </div>
-    );
-};
+      ),
+    },
+    {
+      title: "CODE",
+      dataIndex: "countryCode",
+    },
+    {
+      title: "Status",
+      dataIndex: "status",
+      render: (status: boolean) => (
+        <p className={status ? "text-[#4BB54B]" : "text-[#FF4848]"}>
+          {status ? "Active" : "Inactive"}
+        </p>
+      ),
+    },
+    {
+      title: "Action",
+      dataIndex: "action",
+      render: (_, record) => (
+        <Switch
+          checked={record.status}
+          loading={updatingId === record._id}
+          disabled={updatingId === record._id}
+          onChange={(checked) => handleStatusChange(record, checked)}
+        />
+      ),
+    },
+  ];
 
-export default CountryManagementTable;
+  return <DataTable columns={columns} data={rows} loading={loading} pagination={false} />;
+}

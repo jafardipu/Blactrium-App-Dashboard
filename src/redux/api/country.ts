@@ -9,17 +9,17 @@ const countryApi = baseApi.injectEndpoints({
         method: "GET",
         params,
       }),
-      providesTags: [tagTypes.categories],
+      providesTags: [tagTypes.countries],
     }),
     updateCountryStatus: build.mutation({
-      query: ({data, id}) => ({
-        url: `/admin/country/${id}`,
+      query: ({ id, status }: { id: string; status: boolean }) => ({
+        url: `/admin/country/${id}/status`,
         method: "PATCH",
-        body: data,
+        body: { status },
       }),
-      invalidatesTags: [tagTypes.categories],
+      invalidatesTags: [tagTypes.countries],
     }),
   }),
 });
 
-export const { useGetCountriesQuery } = countryApi;
+export const { useGetCountriesQuery, useUpdateCountryStatusMutation } = countryApi;

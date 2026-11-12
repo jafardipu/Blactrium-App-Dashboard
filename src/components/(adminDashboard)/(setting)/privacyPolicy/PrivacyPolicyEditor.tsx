@@ -1,89 +1,9 @@
 "use client";
-import { Success_model } from "@/lib/utils";
-import { handleApiError } from "@/utils/handleApiError";
-import { useGetSettingsQuery, useUpdateSettingsMutation } from "@/redux/api/settingsApi";
-import { TSettings } from "@/types";
-import { Button } from "antd";
-import dynamic from "next/dynamic";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { FaArrowLeft } from "react-icons/fa6";
-import "react-quill/dist/quill.snow.css";
 
-// Dynamically import ReactQuill with SSR disabled
-const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
+import LegalContentEditor from "../LegalContentEditor";
 
-const PrivacyPolicyEditor = () => {
-  const [value, setValue] = useState("<p>Lorem ipsum dolor sit amet consectetur. Posuere leo nunc eu phasellus consequat egestas diam mattis magna. Dui nullam gravida turpis fames metus ultrices sed mattis. Amet vivamus mus eget purus purus at massa non. In tristique sapien etiam orci convallis. Viverra mauris consectetur integer nisl pellentesque potenti pharetra. Cras gravida ut ullamcorper urna mauris ultricies. Ridiculus aliquam nec sodales lacus proin sit dictumst id. Massa et vulputate ac viverra sit dignissim quis morbi. Malesuada sed ut ut etiam mattis.</p>");
-  const [updateSetting] = useUpdateSettingsMutation();
-  const toolbarOptions = [
-    ["image"],
-    [{ header: [1, 2, false] }],
-    ["bold", "italic", "underline"],
-    [{ list: "ordered" }, { list: "bullet" }],
-    [{ align: [] }],
-    [{ color: [] }, { background: [] }],
-  ];
+const PrivacyPolicyEditor = () => (
+  <LegalContentEditor contentType='privacy' title='Privacy Policy' />
+);
 
-  const moduleConest = {
-    toolbar: toolbarOptions,
-  };
-
-  const { data, isLoading } = useGetSettingsQuery([]);
-  const settingsData = data?.data as TSettings;
-
-  const handleUpdateSettings = async () => {
-    try {
-      await updateSetting({
-        privacy: value,
-      }).unwrap();
-
-      Success_model({ title: "Settings updated successfully" });
-    } catch (error) {
-      handleApiError(error);
-    }
-  };
-  useEffect(() => {
-    if (settingsData) {
-      setValue(settingsData.privacy);
-    }
-  }, [settingsData]);
-
-  return (
-    <>
-      <div className='flex items-center gap-2'>
-        <h4 className='text-2xl font-medium text-text-color'>Privacy Policy</h4>
-      </div>
-      <ReactQuill
-        modules={moduleConest}
-        theme='snow'
-        value={value}
-        onChange={setValue}
-        placeholder='Start writing ......'
-        style={{
-          border: "1px solid #EFE8FD",
-          marginTop: "20px",
-          borderRadius: "10px",
-          backgroundColor: "#68c0a114",
-        }}
-        className="placeholder:!text-white"
-      />
-      <Button
-        size='large'
-        block
-        className='bg-[#fcb806] hover:!bg-[#fcb806]/90 text-white hover:!text-white border-none'
-        style={{
-          marginTop: "20px",
-        }}
-        onClick={handleUpdateSettings}
-        disabled={!value}
-      >
-        Save Changes
-      </Button>
-    </>
-  );
-};
-
-export default dynamic(() => Promise.resolve(PrivacyPolicyEditor), {
-  ssr: false,
-});
+export default PrivacyPolicyEditor;
