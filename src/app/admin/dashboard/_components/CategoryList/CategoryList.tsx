@@ -11,7 +11,7 @@ export default function CategoryList() {
   return (
     <div className='xl:col-span-2 border border-[#FFFFFF33]/[0.2] rounded-2xl p-4'>
       <div className='flex items-center gap-x-2 mb-3'>
-        <h4 className='text-xl text-[#cad1d6] font-semibold'>Category List</h4>
+        <h4 className='text-xl text-[#cad1d6] font-semibold'>Category Lists</h4>
         <hr className='flex-1 border-[#FFFFFF33]/[0.2]' />
       </div>
       <div className='space-y-5'>

@@ -2,6 +2,7 @@
 
 import { Tabs, TabsProps } from "antd";
 import LegalContentEditor from "./LegalContentEditor";
+import FaqsManager from "./faqs/FaqsManager";
 
 const items: TabsProps["items"] = [
   {
@@ -23,6 +24,11 @@ const items: TabsProps["items"] = [
     key: "4",
     label: "Mission",
     children: <LegalContentEditor contentType='mission' title='Mission' />,
+  },
+  {
+    key: "5",
+    label: "FAQs",
+    children: <FaqsManager />,
   },
 ];
 

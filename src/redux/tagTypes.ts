@@ -14,6 +14,10 @@ export const tagTypes = {
   promotion: "promotion",
   dashboard: "dashboard",
   legal: "legal",
+  subscribers: "subscribers",
+  faqs: "faqs",
+  earnings: "earnings",
+  complains: "complains",
 };
 
 export const tagTypesList = [
@@ -32,4 +36,8 @@ export const tagTypesList = [
   tagTypes.promotion,
   tagTypes.dashboard,
   tagTypes.legal,
+  tagTypes.subscribers,
+  tagTypes.faqs,
+  tagTypes.earnings,
+  tagTypes.complains,
 ];

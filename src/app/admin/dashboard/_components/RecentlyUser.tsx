@@ -154,7 +154,7 @@ const RecentlyUser = () => {
 
   return (
     <div className='border border-[#FFFFFF33]/[0.2] rounded-t-xl'>
-      <h4 className='text-xl font-semibold text-[#cad1d6] py-2 px-2'>New users</h4>
+      <h4 className='text-xl font-semibold text-[#cad1d6] py-2 px-2'>New Users</h4>
       <div className='rounded-2xl'>
         {isLoading ? (
           <div className='p-4 space-y-3'>

@@ -169,6 +169,18 @@ export type TSettings = {
 
 export type TLegalContentType = "privacy" | "terms" | "about" | "mission";
 
+export type TFaqStatus = "active" | "inactive";
+
+export type TFaq = {
+  _id: string;
+  question: string;
+  answer: string;
+  status: TFaqStatus;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type TLegal = {
   _id: string;
   contentType: TLegalContentType;
@@ -259,10 +271,112 @@ export type TPromotion = {
   updatedAt: string;
 };
 
+export type TCurrencyEarning = {
+  currency: string;
+  amount: number;
+  productSales?: number;
+};
+
+export type TEarningStats = {
+  feePercent?: number;
+  byCurrency?: Array<{
+    currency: string;
+    productSales: number;
+    productEarnings: number;
+    subscriptionEarnings: number;
+    totalEarnings: number;
+    orderCount: number;
+  }>;
+  productEarningsByCurrency?: TCurrencyEarning[];
+  subscriptionEarningsByCurrency?: TCurrencyEarning[];
+  totalProductSales?: number;
+  subscriptionEarning?: number;
+  primaryCurrency?: string;
+};
+
+export type TSubscriptionEarning = {
+  _id: string;
+  id: string;
+  currency?: string;
+  name: string;
+  accountType?: string;
+  planTier?: string;
+  planName?: string;
+  purchaseDate?: string;
+  expireDate?: string;
+  transactionDate?: string;
+  paymentStatus?: string;
+  status?: string;
+  amount?: number;
+  transactionAmount?: number;
+  user?: {
+    id: string;
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    phone?: string | null;
+    role?: string;
+    accountStatus?: string;
+    avatar?: string | null;
+  };
+};
+
+export type TComplainType = "event" | "profile" | "product";
+export type TComplainStatus = "pending" | "reviewed" | "resolved" | "dismissed";
+
+export type TComplain = {
+  _id: string;
+  type: TComplainType;
+  targetId?: string | null;
+  name?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  subject?: string | null;
+  message: string;
+  status: TComplainStatus;
+  adminNote?: string | null;
+  userId?: {
+    _id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone?: string;
+    role: string;
+    accountStatus: string;
+  } | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type TCommissionEarning = {
+  id: string;
+  productId: string;
+  currency: string;
+  productName: string;
+  productImage?: string | null;
+  price: number;
+  totalSales: number;
+  totalEarnings: number;
+  orderCount?: number;
+  transactionDate?: string;
+  paymentStatus?: string;
+  user?: {
+    id: string;
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+  };
+};
+
 export type TDashboardOverview = {
   totalActiveUsers: number;
   totalBusinesses: number;
-  totalEarning: number;
+  expiredSubscriptionAccounts?: number;
+  productEarningsByCurrency?: TCurrencyEarning[];
+  subscriptionEarningsByCurrency?: TCurrencyEarning[];
+  feePercent?: number;
+  totalEarning?: number;
+  primaryCurrency?: string;
 };
 
 export type TDashboardCategory = {
@@ -270,6 +384,17 @@ export type TDashboardCategory = {
   categoryName: string;
   categoryImage: string;
   subCategoryCount: number;
+};
+
+export type TSubscribeEmail = {
+  _id: string;
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  subscribedAt: string;
+  status: string;
+  avatar?: string | null;
 };
 
 export type TDashboardNewUser = {
@@ -307,7 +432,11 @@ export type TAdminUser = {
   role: string;
   joinDate: string;
   status: string;
-  avatar?: string;
+  avatar?: string | null;
+  subscriptionStatus?: string | null;
+  planTier?: string | null;
+  subscriptionExpiresAt?: string | null;
+  deactivationReason?: string | null;
 };
 
 export type TAdminProfile = {

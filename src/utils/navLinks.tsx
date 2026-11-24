@@ -49,7 +49,7 @@ export const navLinks = [
   {
     key: "earning",
     icon: <Wallet size={18} />,
-    label: <Link href={"/admin/earning"}>Earning</Link>,
+    label: <Link href={"/admin/earning"}>Earnings</Link>,
   },
   {
     key: "Custom Notifications",

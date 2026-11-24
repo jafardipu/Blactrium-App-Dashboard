@@ -4,6 +4,11 @@ import { tagTypesList } from "../tagTypes";
 import Cookies from "js-cookie";
 import { ACCESS_TOKEN_COOKIE, REFRESH_TOKEN_COOKIE } from "@/utils/authCookies";
 
+type RefreshResult = {
+  ok: boolean;
+  accessToken: string | null;
+};
+
 const baseQuery = fetchBaseQuery({
   baseUrl: process.env.NEXT_PUBLIC_BASE_URL,
   credentials: "include",
@@ -11,7 +16,9 @@ const baseQuery = fetchBaseQuery({
     const otpToken = sessionStorage.getItem("otpToken");
     const forgotPasswordToken = sessionStorage.getItem("forgotPasswordToken");
     const token =
-      (getState() as any).auth.token || Cookies.get(ACCESS_TOKEN_COOKIE);
+      Cookies.get(ACCESS_TOKEN_COOKIE) ||
+      (getState() as any).auth.token ||
+      null;
 
     if (otpToken) {
       headers.set("authorization", `Bearer ${otpToken}`);
@@ -47,9 +54,29 @@ const getAccessToken = (payload: any) =>
 const getRefreshToken = (payload: any) =>
   payload?.data?.refreshToken || payload?.refreshToken || null;
 
-let refreshPromise: Promise<string | null> | null = null;
+const isAuthError = (result: any) => {
+  const status = result?.error?.status;
+  const dataStatus = result?.error?.data?.status;
+  const message = String(
+    result?.error?.data?.message || result?.error?.data?.error || "",
+  ).toLowerCase();
 
-const refreshAccessToken = async (api: any): Promise<string | null> => {
+  return (
+    status === 401 ||
+    status === 403 ||
+    dataStatus === 401 ||
+    dataStatus === 403 ||
+    message.includes("unauthorized") ||
+    message.includes("jwt expired") ||
+    message.includes("token expired") ||
+    message.includes("invalid token") ||
+    message.includes("access token")
+  );
+};
+
+let refreshPromise: Promise<RefreshResult> | null = null;
+
+const refreshAccessToken = async (api: any): Promise<RefreshResult> => {
   try {
     const refreshToken = Cookies.get(REFRESH_TOKEN_COOKIE);
 
@@ -63,49 +90,75 @@ const refreshAccessToken = async (api: any): Promise<string | null> => {
       body: JSON.stringify(refreshToken ? { refreshToken } : {}),
     });
 
-    const data = await res.json();
+    const data = await res.json().catch(() => ({}));
     const accessToken = getAccessToken(data);
     const nextRefreshToken = getRefreshToken(data) || refreshToken || undefined;
 
-    if (!res.ok || !accessToken) {
+    if (!res.ok) {
       api.dispatch(logout());
-      return null;
+      return { ok: false, accessToken: null };
     }
 
-    const user = api.getState().auth.user;
-    api.dispatch(
-      setUser({
-        user,
-        token: accessToken,
-        refreshToken: nextRefreshToken,
-      }),
-    );
+    if (accessToken) {
+      const user = api.getState().auth.user;
+      api.dispatch(
+        setUser({
+          user,
+          token: accessToken,
+          refreshToken: nextRefreshToken,
+        }),
+      );
+      return { ok: true, accessToken };
+    }
 
-    return accessToken;
+    // Refresh succeeded via Set-Cookie only
+    return { ok: true, accessToken: Cookies.get(ACCESS_TOKEN_COOKIE) || null };
   } catch (error) {
     console.error("Refresh token error:", error);
     api.dispatch(logout());
-    return null;
+    return { ok: false, accessToken: null };
   }
+};
+
+const withAuthHeader = (args: any, accessToken: string | null) => {
+  if (!accessToken) return args;
+
+  if (typeof args === "string") {
+    return {
+      url: args,
+      headers: {
+        authorization: `Bearer ${accessToken}`,
+      },
+    };
+  }
+
+  return {
+    ...args,
+    headers: {
+      ...(args.headers || {}),
+      authorization: `Bearer ${accessToken}`,
+    },
+  };
 };
 
 const baseQueryWithRefreshToken = async (args: any, api: any, extraOptions: any) => {
   let result = await baseQuery(args, api, extraOptions);
 
-  if (
-    (result?.error?.status === 401 || result?.error?.status === 403) &&
-    !shouldSkipRefresh(args)
-  ) {
+  if (isAuthError(result) && !shouldSkipRefresh(args)) {
     if (!refreshPromise) {
       refreshPromise = refreshAccessToken(api).finally(() => {
         refreshPromise = null;
       });
     }
 
-    const newToken = await refreshPromise;
+    const refreshed = await refreshPromise;
 
-    if (newToken) {
-      result = await baseQuery(args, api, extraOptions);
+    if (refreshed.ok) {
+      result = await baseQuery(
+        withAuthHeader(args, refreshed.accessToken),
+        api,
+        extraOptions,
+      );
     }
   }
 

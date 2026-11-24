@@ -65,9 +65,21 @@ const UserTable = ({ role }: UserTableProps) => {
   }
 
   const { data, isLoading } = useGetUsersQuery(queryParams);
-  const payload = data?.data as
+
+  const response = data as
     | {
-        data?: TAdminUser[];
+        data?:
+          | TAdminUser[]
+          | {
+              data?: TAdminUser[];
+              meta?: {
+                page?: number;
+                limit?: number;
+                total?: number;
+                totalPages?: number;
+                totalPage?: number;
+              };
+            };
         meta?: {
           page?: number;
           limit?: number;
@@ -78,12 +90,14 @@ const UserTable = ({ role }: UserTableProps) => {
       }
     | undefined;
 
-  const users = payload?.data ?? [];
+  const nested = !Array.isArray(response?.data) ? response?.data : undefined;
+  const users = Array.isArray(response?.data) ? response.data : nested?.data ?? [];
+  const responseMeta = response?.meta ?? nested?.meta;
   const meta = {
-    page: payload?.meta?.page || page,
-    limit: payload?.meta?.limit || limit,
-    total: payload?.meta?.total || 0,
-    totalPage: payload?.meta?.totalPages || payload?.meta?.totalPage || 1,
+    page: responseMeta?.page || page,
+    limit: responseMeta?.limit || limit,
+    total: responseMeta?.total || 0,
+    totalPage: responseMeta?.totalPages || responseMeta?.totalPage || 1,
   };
 
   const handleStatusUpdate = async (
