@@ -3,6 +3,7 @@
 import { Empty, Input, Popconfirm, Skeleton, TableProps } from "antd";
 import UserDetails from "@/components/(adminDashboard)/user/UserDetails";
 import UserAvatar from "@/components/shared/UserAvatar";
+import CopyableId from "@/components/shared/CopyableId";
 import DataTable from "@/utils/DataTable";
 import PaginationSection from "@/components/shared/PaginationSection";
 import { Eye, Trash2 } from "lucide-react";
@@ -123,9 +124,9 @@ const UserTable = ({ role }: UserTableProps) => {
   const columns: TableProps<TAdminUser>["columns"] = [
     {
       title: "ID",
-      dataIndex: "id",
-      render: (_text, _record, index) => (
-        <p>#{(meta.page - 1) * meta.limit + index + 1}</p>
+      dataIndex: "_id",
+      render: (_text, record) => (
+        <CopyableId id={record._id || record.id} previewLast={4} />
       ),
     },
     {

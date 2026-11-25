@@ -32,9 +32,9 @@ import { useEffect, useState } from "react";
 
 const TYPE_TABS = [
   { key: "all", label: "All" },
-  { key: "product", label: "Product" },
-  { key: "profile", label: "Profile" },
-  { key: "event", label: "Event" },
+  { key: "product", label: "Products" },
+  { key: "profile", label: "Profiles" },
+  { key: "event", label: "Events" },
 ] as const;
 
 const STATUS_OPTIONS: Array<{ value: TComplainStatus | "all"; label: string }> = [

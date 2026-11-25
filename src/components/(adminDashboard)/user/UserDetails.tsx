@@ -7,6 +7,7 @@ import moment from "moment";
 import { ReactNode, useEffect, useState } from "react";
 import { RiCloseLargeLine } from "react-icons/ri";
 import UserAvatar from "@/components/shared/UserAvatar";
+import CopyableId from "@/components/shared/CopyableId";
 import { useGetUserByIdQuery } from "@/redux/api/usersApi";
 
 type TPropsType = {
@@ -124,12 +125,16 @@ const UserDetails = ({ open, setOpen, userId }: TPropsType) => {
             </div>
 
             <div className='mt-8'>
-              <DetailRow label='User name' value={fullName} striped />
-              <DetailRow label='Email' value={user.email} />
+              <DetailRow
+                label='User ID'
+                value={<CopyableId id={user._id || user.id} />}
+                striped
+              />
+              <DetailRow label='User name' value={fullName} />
+              <DetailRow label='Email' value={user.email} striped />
               <DetailRow
                 label='Contact Number'
                 value={user.contactNumber || user.phone}
-                striped
               />
               <DetailRow
                 label='Country'
@@ -150,11 +155,13 @@ const UserDetails = ({ open, setOpen, userId }: TPropsType) => {
                     "N/A"
                   )
                 }
+                striped
               />
-              <DetailRow label='Role' value={user.role} striped valueClassName='capitalize' />
+              <DetailRow label='Role' value={user.role} valueClassName='capitalize' />
               <DetailRow
                 label='Status'
                 value={user.status}
+                striped
                 valueClassName={cn(
                   "capitalize",
                   user.status?.toLowerCase() === "active"
@@ -165,7 +172,6 @@ const UserDetails = ({ open, setOpen, userId }: TPropsType) => {
               <DetailRow
                 label='Verified'
                 value={user.isVerified ? "Yes" : "No"}
-                striped
               />
               <DetailRow
                 label='Legal Terms'

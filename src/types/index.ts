@@ -506,6 +506,7 @@ export type TAdminUserSocialLink = {
 };
 
 export type TAdminUserDetails = {
+  _id?: string;
   id: string;
   firstName: string;
   lastName: string;
