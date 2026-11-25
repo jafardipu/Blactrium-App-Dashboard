@@ -23,8 +23,8 @@ const nextConfig = {
     return [
       {
         source: "/api/:path*",
-        // destination: "https://api.blactrium.com/api/:path*", // Proxy to Backend
-        destination: "http://localhost:5080/api/:path*", // Proxy to Backend
+        destination: "https://api.blactrium.com/api/:path*", // Proxy to Backend
+        // destination: "http://localhost:5080/api/:path*", // Proxy to Backend
       },
     ];
   },
