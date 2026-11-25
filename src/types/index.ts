@@ -348,6 +348,42 @@ export type TComplain = {
   updatedAt: string;
 };
 
+export type TReportStatus = "pending" | "reviewed" | "resolved" | "dismissed";
+export type TReportItemType = "product" | "business" | "business-profile";
+
+export type TReportPerson = {
+  _id: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+} | null;
+
+export type TReport = {
+  _id: string;
+  itemType: TReportItemType;
+  reason: string;
+  status: TReportStatus;
+  adminNote?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  reporterId?: TReportPerson;
+  reviewId?: {
+    _id: string;
+    targetId?: string;
+    rating?: number;
+    text?: string | null;
+    image?: string | null;
+    isAnonymous?: boolean;
+    createdAt?: string;
+    userId?: TReportPerson;
+  } | null;
+  target?: {
+    _id: string;
+    type?: "product" | "business" | "business-profile" | "shop" | null;
+    name?: string | null;
+  } | null;
+};
+
 export type TCommissionEarning = {
   id: string;
   productId: string;

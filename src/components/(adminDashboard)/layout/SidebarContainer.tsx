@@ -53,18 +53,15 @@ const SidebarContainer = ({ collapsed }: { collapsed: boolean }) => {
         minHeight: "100vh",
       }}
     >
-      {/* =============== Logo ===============  */}
-
-      <div className='    bottom-1 flex justify-center items-center px-2'>
+      <div className='bottom-1 flex justify-center items-center px-2'>
         <div className='flex flex-col justify-center items-center gap-y-5 pt-2 pb-1 '>
           <Link href={"/admin/dashboard"}>
             <Image
               src={logo}
               alt='logo_Image'
-              className={cn(`lg:px-1  object-contain`,!collapsed && "h-[100px]")}
+              className={cn(`lg:px-1  object-contain`, !collapsed && "h-[100px]")}
             />
           </Link>
-
         </div>
       </div>
 
