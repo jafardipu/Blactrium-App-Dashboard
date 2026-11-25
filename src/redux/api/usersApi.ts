@@ -19,10 +19,17 @@ const usersApi = baseApi.injectEndpoints({
       providesTags: [tagTypes.user],
     }),
     updateUserStatus: builder.mutation({
-      query: ({ id, status }: { id: string; status: "blocked" | "deleted" | "active" }) => ({
+      query: ({ id, status }: { id: string; status: "blocked" | "active" }) => ({
         url: `/admin/users/${id}/status`,
         method: "PATCH",
         body: { status },
+      }),
+      invalidatesTags: [tagTypes.users, tagTypes.user, tagTypes.dashboard],
+    }),
+    deleteUser: builder.mutation({
+      query: (id: string) => ({
+        url: `/admin/users/${id}`,
+        method: "DELETE",
       }),
       invalidatesTags: [tagTypes.users, tagTypes.user, tagTypes.dashboard],
     }),
@@ -33,4 +40,5 @@ export const {
   useGetUsersQuery,
   useGetUserByIdQuery,
   useUpdateUserStatusMutation,
+  useDeleteUserMutation,
 } = usersApi;

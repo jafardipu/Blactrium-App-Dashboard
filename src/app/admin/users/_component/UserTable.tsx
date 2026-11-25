@@ -14,6 +14,7 @@ import { useSearchParams } from "next/navigation";
 import { useUpdateSearchParams } from "@/hooks/useUpdateSearchParams";
 import { useDebounced } from "@/redux/hooks";
 import {
+  useDeleteUserMutation,
   useGetUsersQuery,
   useUpdateUserStatusMutation,
 } from "@/redux/api/usersApi";
@@ -34,6 +35,7 @@ const UserTable = ({ role }: UserTableProps) => {
   const updateParams = useUpdateSearchParams();
   const [updateUserStatus, { isLoading: isUpdatingStatus }] =
     useUpdateUserStatusMutation();
+  const [deleteUser, { isLoading: isDeleting }] = useDeleteUserMutation();
 
   const page = Number(searchParams.get("page") || 1);
   const limit = Number(searchParams.get("limit") || 10);
@@ -103,7 +105,7 @@ const UserTable = ({ role }: UserTableProps) => {
 
   const handleStatusUpdate = async (
     user: TAdminUser,
-    status: "blocked" | "deleted" | "active",
+    status: "blocked" | "active",
   ) => {
     try {
       const id = user.id || user._id;
@@ -112,10 +114,18 @@ const UserTable = ({ role }: UserTableProps) => {
         title:
           status === "blocked"
             ? `${user.firstName} blocked successfully`
-            : status === "active"
-              ? `${user.firstName} unblocked successfully`
-              : `${user.firstName} deleted successfully`,
+            : `${user.firstName} unblocked successfully`,
       });
+    } catch (error) {
+      handleApiError(error);
+    }
+  };
+
+  const handleDeleteUser = async (user: TAdminUser) => {
+    try {
+      const id = user.id || user._id;
+      await deleteUser(id).unwrap();
+      Success_model({ title: `${user.firstName} deleted successfully` });
     } catch (error) {
       handleApiError(error);
     }
@@ -223,15 +233,15 @@ const UserTable = ({ role }: UserTableProps) => {
               <Popconfirm
                 title='Delete the user'
                 description={`Are you sure to delete ${record.firstName}? This cannot be undone.`}
-                onConfirm={() => handleStatusUpdate(record, "deleted")}
+                onConfirm={() => handleDeleteUser(record)}
                 okText='Yes'
                 cancelText='No'
-                disabled={isUpdatingStatus}
+                disabled={isDeleting}
               >
                 <div
                   className={cn(
                     "p-1 bg-[#FF48481A] rounded-full",
-                    isUpdatingStatus && "opacity-50",
+                    isDeleting && "opacity-50",
                   )}
                 >
                   <Trash2 size={20} color='#FF4848' className='cursor-pointer' />

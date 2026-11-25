@@ -8,7 +8,10 @@ import moment from "moment";
 import { useState } from "react";
 import { CgUnblock } from "react-icons/cg";
 import { useGetDashboardQuery } from "@/redux/api/dashboardApi";
-import { useUpdateUserStatusMutation } from "@/redux/api/usersApi";
+import {
+  useDeleteUserMutation,
+  useUpdateUserStatusMutation,
+} from "@/redux/api/usersApi";
 import { TDashboardData, TDashboardNewUser } from "@/types";
 import { Success_model, cn } from "@/lib/utils";
 import { handleApiError } from "@/utils/handleApiError";
@@ -19,11 +22,12 @@ const RecentlyUser = () => {
   const { data, isLoading } = useGetDashboardQuery(undefined);
   const [updateUserStatus, { isLoading: isUpdatingStatus }] =
     useUpdateUserStatusMutation();
+  const [deleteUser, { isLoading: isDeleting }] = useDeleteUserMutation();
   const users = (data?.data as TDashboardData | undefined)?.newUsers ?? [];
 
   const handleStatusUpdate = async (
     user: TDashboardNewUser,
-    status: "blocked" | "deleted" | "active",
+    status: "blocked" | "active",
   ) => {
     try {
       const id = user.id || user._id;
@@ -32,10 +36,18 @@ const RecentlyUser = () => {
         title:
           status === "blocked"
             ? `${user.firstName} blocked successfully`
-            : status === "active"
-              ? `${user.firstName} unblocked successfully`
-              : `${user.firstName} deleted successfully`,
+            : `${user.firstName} unblocked successfully`,
       });
+    } catch (error) {
+      handleApiError(error);
+    }
+  };
+
+  const handleDeleteUser = async (user: TDashboardNewUser) => {
+    try {
+      const id = user.id || user._id;
+      await deleteUser(id).unwrap();
+      Success_model({ title: `${user.firstName} deleted successfully` });
     } catch (error) {
       handleApiError(error);
     }
@@ -131,17 +143,17 @@ const RecentlyUser = () => {
               <Popconfirm
                 title='Delete the user'
                 description={`Are you sure to delete ${record.firstName}? This cannot be undone.`}
-                onConfirm={() => handleStatusUpdate(record, "deleted")}
+                onConfirm={() => handleDeleteUser(record)}
                 okText='Yes'
                 cancelText='No'
-                disabled={isUpdatingStatus}
+                disabled={isDeleting}
               >
                 <Trash2
                   size={20}
                   color='#FF4848'
                   className={cn(
                     "cursor-pointer",
-                    isUpdatingStatus && "opacity-50",
+                    isDeleting && "opacity-50",
                   )}
                 />
               </Popconfirm>
