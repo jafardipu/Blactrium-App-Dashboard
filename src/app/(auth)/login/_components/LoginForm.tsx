@@ -13,7 +13,7 @@ import { toast } from "sonner";
 type FieldType = {
   email?: string;
   password?: string;
-  remember?: string;
+  remember?: boolean;
 };
 
 const LoginForm = () => {
@@ -23,10 +23,11 @@ const LoginForm = () => {
 
   const onFinish: FormProps<FieldType>["onFinish"] = async (values) => {
     try {
+      const rememberMe = Boolean(values?.remember);
       const userData: any = {
         email: values?.email,
         password: values?.password,
-        rememberMe: values?.remember,
+        rememberMe,
       };
       const res = await login(userData).unwrap();
       const payload = res?.data ?? res;
@@ -40,6 +41,7 @@ const LoginForm = () => {
             user,
             token,
             refreshToken,
+            rememberMe,
           }),
         );
       }

@@ -1,13 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { TUser } from "@/types";
-import {
-  ACCESS_TOKEN_COOKIE,
-  REFRESH_TOKEN_COOKIE,
-  setAuthCookies,
-} from "@/utils/authCookies";
+import { clearClientAuthCookies, setAuthCookies } from "@/utils/authCookies";
 import { createSlice } from "@reduxjs/toolkit";
-import Cookies from "js-cookie";
 
 type TInitialState = { user: TUser | null; token: string | null };
 
@@ -21,20 +16,18 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     setUser: (state, action) => {
-      const { user, token, refreshToken } = action.payload;
+      const { user, token, refreshToken, rememberMe } = action.payload;
 
       state.user = user ?? state.user;
       state.token = token;
 
-      setAuthCookies(token, refreshToken);
+      setAuthCookies(token, refreshToken, { rememberMe });
     },
 
     logout: (state) => {
       state.user = null;
       state.token = null;
-
-      Cookies.remove(ACCESS_TOKEN_COOKIE, { path: "/" });
-      Cookies.remove(REFRESH_TOKEN_COOKIE, { path: "/" });
+      clearClientAuthCookies();
     },
   },
 });

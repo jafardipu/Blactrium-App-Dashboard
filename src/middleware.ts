@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { jwtDecode } from "jwt-decode";
 import { authRoutes } from "./utils/authRoutes";
-import { ACCESS_TOKEN_COOKIE, REFRESH_TOKEN_COOKIE } from "./utils/authCookies";
+import {
+  ACCESS_TOKEN_COOKIE,
+  ACCESS_TOKEN_MAX_AGE_SECONDS,
+  REFRESH_TOKEN_COOKIE,
+  REFRESH_TOKEN_MAX_AGE_SECONDS,
+} from "./utils/authCookies";
 import { TTokenUser } from "./types";
 
 const clearAuthCookies = (response: NextResponse) => {
@@ -95,12 +100,14 @@ const applyAuthCookies = (
   response.cookies.set(ACCESS_TOKEN_COOKIE, accessToken, {
     path: "/",
     sameSite: "lax",
+    maxAge: ACCESS_TOKEN_MAX_AGE_SECONDS,
   });
 
   if (refreshToken) {
     response.cookies.set(REFRESH_TOKEN_COOKIE, refreshToken, {
       path: "/",
       sameSite: "lax",
+      maxAge: REFRESH_TOKEN_MAX_AGE_SECONDS,
     });
   }
 

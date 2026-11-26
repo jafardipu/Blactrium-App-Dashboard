@@ -1,48 +1,65 @@
 "use client";
 
+import PaginationSection from "@/components/shared/PaginationSection";
+import { useUpdateSearchParams } from "@/hooks/useUpdateSearchParams";
+import { Success_model } from "@/lib/utils";
 import {
+  useDeleteCategoryMutation,
   useGetCategoriesQuery,
   useUpdateCategoryMutation,
 } from "@/redux/api/categories";
 import { useDebounced } from "@/redux/hooks";
-import { useUpdateSearchParams } from "@/hooks/useUpdateSearchParams";
-import PaginationSection from "@/components/shared/PaginationSection";
-import { Success_model } from "@/lib/utils";
-import { handleApiError } from "@/utils/handleApiError";
 import { TCategory } from "@/types";
-import { Button, Empty, Input, Popconfirm, Skeleton } from "antd";
-import { Plus, Trash2 } from "lucide-react";
+import DataTable from "@/utils/DataTable";
+import { handleApiError } from "@/utils/handleApiError";
+import {
+  Button,
+  Empty,
+  Input,
+  Modal,
+  Skeleton,
+  Switch,
+  TableProps,
+} from "antd";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import EditCategoryModal from "./EditCategoryModal";
 
-function CategoryCardImage({
-  src,
-  alt,
-}: {
-  src?: string | null;
-  alt: string;
-}) {
+type CategoryOverrides = Record<
+  string,
+  { status?: boolean; isPopular?: boolean }
+>;
+
+const getErrorStatus = (error: unknown) =>
+  error && typeof error === "object" && "status" in error
+    ? (error as { status?: number }).status
+    : undefined;
+
+const getErrorMessage = (error: unknown) => {
+  if (error && typeof error === "object" && "data" in error) {
+    const data = (error as { data?: { message?: string } }).data;
+    if (data?.message) return data.message;
+  }
+  return "Something went wrong";
+};
+
+function CategoryThumb({ src, alt }: { src?: string | null; alt: string }) {
   const [failed, setFailed] = useState(false);
-  const showFallback = !src || failed;
 
-  if (showFallback) {
-    return (
-      <div
-        className='rounded-2xl w-full h-[220px] bg-[#D1D5DB]'
-        aria-label={alt}
-      />
-    );
+  if (!src || failed) {
+    return <div className='size-12 rounded-lg bg-[#D1D5DB]' aria-label={alt} />;
   }
 
   return (
     <Image
       src={src}
       alt={alt}
-      width={1200}
-      height={1200}
-      className='rounded-2xl w-full h-[220px] object-cover'
+      width={48}
+      height={48}
+      className='size-12 rounded-lg object-cover'
       onError={() => setFailed(true)}
     />
   );
@@ -52,7 +69,13 @@ export default function CategoriesContainer() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const updateParams = useUpdateSearchParams();
-  const [updateCategory, { isLoading: isDeleting }] = useUpdateCategoryMutation();
+
+  const [overrides, setOverrides] = useState<CategoryOverrides>({});
+  const [togglingKey, setTogglingKey] = useState<string | null>(null);
+  const [editTarget, setEditTarget] = useState<TCategory | null>(null);
+
+  const [updateCategory] = useUpdateCategoryMutation();
+  const [deleteCategory, { isLoading: isDeleting }] = useDeleteCategoryMutation();
 
   const page = Number(searchParams.get("page") || 1);
   const limit = Number(searchParams.get("limit") || 10);
@@ -67,56 +90,230 @@ export default function CategoriesContainer() {
   useEffect(() => {
     const nextSearch = String(debouncedSearch).trim();
     if (nextSearch === search) return;
-
     updateParams({
       search: nextSearch || null,
       page: "1",
     });
   }, [debouncedSearch, search, updateParams]);
 
-  const queryParams: Record<string, string | number | boolean> = {
-    page,
-    limit,
-    status: true,
-  };
+  const queryParams: Record<string, string | number> = { page, limit };
+  if (search) queryParams.search = search;
 
-  if (search) {
-    queryParams.search = search;
-  }
+  const { data, isLoading, isFetching, refetch } =
+    useGetCategoriesQuery(queryParams);
 
-  const { data, isLoading } = useGetCategoriesQuery(queryParams);
   const payload = data?.data as
     | {
         data?: TCategory[];
         meta?: {
           total?: number;
           totalPages?: number;
-          links?: {
-            currentPage?: number;
-          };
+          links?: { currentPage?: number };
         };
       }
     | undefined;
 
-  const categories = payload?.data ?? [];
+  const categories = useMemo(() => payload?.data ?? [], [payload?.data]);
   const meta = {
     page: payload?.meta?.links?.currentPage || page,
     limit,
     total: payload?.meta?.total || 0,
-    totalPage: payload?.meta?.totalPages || 1,
   };
 
-  const handleDelete = async (category: TCategory) => {
+  const rows = useMemo(
+    () =>
+      categories.map((category) => {
+        const override = overrides[category._id] || {};
+        return {
+          ...category,
+          id: category._id,
+          status:
+            override.status !== undefined ? override.status : Boolean(category.status),
+          isPopular:
+            override.isPopular !== undefined
+              ? override.isPopular
+              : Boolean(category.isPopular),
+        };
+      }),
+    [categories, overrides],
+  );
+
+  const clearOverride = (id: string, field: "status" | "isPopular") => {
+    setOverrides((prev) => {
+      const next = { ...prev };
+      if (!next[id]) return prev;
+      const copy = { ...next[id] };
+      delete copy[field];
+      if (Object.keys(copy).length === 0) delete next[id];
+      else next[id] = copy;
+      return next;
+    });
+  };
+
+  const handleToggle = async (
+    category: TCategory,
+    field: "status" | "isPopular",
+    value: boolean,
+  ) => {
+    const key = `${category._id}:${field}`;
+    setOverrides((prev) => ({
+      ...prev,
+      [category._id]: { ...prev[category._id], [field]: value },
+    }));
+    setTogglingKey(key);
+
     try {
-      await updateCategory({
+      const res = await updateCategory({
+        id: category._id,
+        [field]: value,
+      }).unwrap();
+      Success_model({
+        title: (res as { message?: string })?.message || "Category updated successfully",
+      });
+      clearOverride(category._id, field);
+    } catch (error) {
+      clearOverride(category._id, field);
+      handleApiError(error);
+    } finally {
+      setTogglingKey(null);
+    }
+  };
+
+  const deactivateCategory = async (category: TCategory) => {
+    try {
+      const res = await updateCategory({
         id: category._id,
         status: false,
       }).unwrap();
-      Success_model({ title: "Category deleted successfully" });
+      Success_model({
+        title:
+          (res as { message?: string })?.message || "Category deactivated successfully",
+      });
     } catch (error) {
       handleApiError(error);
     }
   };
+
+  const runDelete = async (category: TCategory) => {
+    try {
+      const res = await deleteCategory(category._id).unwrap();
+      Success_model({
+        title: (res as { message?: string })?.message || "Category deleted successfully",
+      });
+    } catch (error) {
+      if (getErrorStatus(error) === 409) {
+        Modal.confirm({
+          title: "Cannot delete category",
+          content: getErrorMessage(error),
+          okText: "Deactivate instead",
+          cancelText: "Cancel",
+          onOk: () => deactivateCategory(category),
+        });
+        return;
+      }
+      handleApiError(error);
+    }
+  };
+
+  const handleDeleteClick = (category: TCategory) => {
+    const subCount = category.subCategoryCount ?? 0;
+    const businessCount = category.businessCount ?? 0;
+
+    if (businessCount > 0) {
+      Modal.confirm({
+        title: "Category in use",
+        content: `"${category.categoryName}" is used by ${businessCount} business(es). Deletion will be refused. Deactivate instead?`,
+        okText: "Deactivate instead",
+        cancelText: "Cancel",
+        onOk: () => deactivateCategory(category),
+      });
+      return;
+    }
+
+    Modal.confirm({
+      title: "Delete category",
+      content: `Delete "${category.categoryName}" and its ${subCount} subcategories? This cannot be undone.`,
+      okText: "Delete",
+      okButtonProps: { danger: true, loading: isDeleting },
+      cancelText: "Cancel",
+      onOk: () => runDelete(category),
+    });
+  };
+
+  const columns: TableProps<(typeof rows)[number]>["columns"] = [
+    {
+      title: "Category",
+      dataIndex: "categoryName",
+      render: (_text, record) => (
+        <button
+          type='button'
+          className='flex items-center gap-3 text-left'
+          onClick={() => router.push(`/admin/categories/${record._id}`)}
+        >
+          <CategoryThumb src={record.categoryImage} alt={record.categoryName} />
+          <span className='font-medium text-white hover:underline'>
+            {record.categoryName}
+          </span>
+        </button>
+      ),
+    },
+    {
+      title: "Subcategories",
+      dataIndex: "subCategoryCount",
+      render: (value) => value ?? 0,
+    },
+    {
+      title: "Businesses",
+      dataIndex: "businessCount",
+      render: (value) => value ?? 0,
+    },
+    {
+      title: "Popular",
+      dataIndex: "isPopular",
+      render: (_text, record) => (
+        <Switch
+          checked={Boolean(record.isPopular)}
+          loading={togglingKey === `${record._id}:isPopular`}
+          onChange={(checked) => handleToggle(record, "isPopular", checked)}
+        />
+      ),
+    },
+    {
+      title: "Active",
+      dataIndex: "status",
+      render: (_text, record) => (
+        <Switch
+          checked={Boolean(record.status)}
+          loading={togglingKey === `${record._id}:status`}
+          onChange={(checked) => handleToggle(record, "status", checked)}
+        />
+      ),
+    },
+    {
+      title: "Actions",
+      dataIndex: "action",
+      render: (_text, record) => (
+        <div className='flex items-center gap-2'>
+          <button
+            type='button'
+            className='p-1.5 rounded-full bg-[#FA86001A]'
+            onClick={() => setEditTarget(record)}
+            aria-label='Edit category'
+          >
+            <Pencil size={16} color='#78C0A8' />
+          </button>
+          <button
+            type='button'
+            className='p-1.5 rounded-full bg-[#FF48481A]'
+            onClick={() => handleDeleteClick(record)}
+            aria-label='Delete category'
+          >
+            <Trash2 size={16} color='#FF4848' />
+          </button>
+        </div>
+      ),
+    },
+  ];
 
   return (
     <div>
@@ -142,74 +339,45 @@ export default function CategoriesContainer() {
         </Link>
       </div>
 
-      <div className='border border-[#3D3D3D] rounded-xl px-5 py-3 pb-5'>
-        <h3 className='text-[#93A4B0] text-xl font-semibold mb-3'>All Categories</h3>
+      <div className='border border-[#FFFFFF33]/[0.2] rounded-xl'>
+        <div className='px-3 py-3'>
+          <h3 className='text-[#93A4B0] text-xl font-semibold'>All Categories</h3>
+        </div>
 
         {isLoading ? (
-          <div className='grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'>
-            {Array.from({ length: 8 }).map((_, index) => (
-              <Skeleton.Node key={index} active style={{ width: "100%", height: 220 }} />
+          <div className='p-4 space-y-3'>
+            {Array.from({ length: 6 }).map((_, index) => (
+              <Skeleton key={index} active avatar paragraph={{ rows: 1 }} />
             ))}
           </div>
-        ) : categories.length === 0 ? (
+        ) : rows.length === 0 ? (
           <div className='py-10'>
             <Empty description='No categories found' />
           </div>
         ) : (
-          <div className='grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'>
-            {categories.map((category) => (
-              <div
-                key={category._id}
-                className='flex flex-col items-center gap-3 border border-[#FFFFFF33]/[0.2] rounded-2xl relative cursor-pointer group overflow-hidden'
-              >
-                <div
-                  onClick={() => router.push(`/admin/categories/${category._id}`)}
-                  className='w-full'
-                >
-                  <CategoryCardImage
-                    src={category.categoryImage}
-                    alt={category.categoryName}
-                  />
-                  <div className='absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-[#1f1d1d]/90 to-transparent py-2 px-4 space-y-1 rounded-2xl pointer-events-none'>
-                    <h5 className='text-[#F6F6F6] lg:text-xl max-w-[200px] font-medium'>
-                      {category.categoryName}
-                    </h5>
-                    <p className='text-[#CBD5E1] text-lg'>
-                      {category.subCategoryCount ?? 0} Sub Categories
-                    </p>
-                  </div>
-                </div>
-
-                <Popconfirm
-                  title='Delete category'
-                  description={`Are you sure to delete "${category.categoryName}"?`}
-                  onConfirm={() => handleDelete(category)}
-                  okText='Yes'
-                  cancelText='No'
-                  disabled={isDeleting}
-                >
-                  <button
-                    type='button'
-                    className='absolute top-3 right-3 z-10 bg-red-600 hover:bg-red-700 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg'
-                    aria-label={`Delete ${category.categoryName}`}
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </Popconfirm>
+          <>
+            <DataTable columns={columns} data={rows} loading={isFetching} pagination={false} />
+            {meta.total > 0 && (
+              <div className='px-2 pb-3'>
+                <PaginationSection
+                  total={meta.total}
+                  current={meta.page}
+                  pageSize={meta.limit}
+                />
               </div>
-            ))}
-          </div>
-        )}
-
-        {!isLoading && meta.total > 0 && (
-          <PaginationSection
-            total={meta.total}
-            current={meta.page}
-            pageSize={meta.limit}
-          />
+            )}
+          </>
         )}
       </div>
+
+      <EditCategoryModal
+        open={Boolean(editTarget)}
+        category={editTarget}
+        onClose={() => setEditTarget(null)}
+        onNotFound={() => {
+          void refetch();
+        }}
+      />
     </div>
   );
 }

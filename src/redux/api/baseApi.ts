@@ -61,16 +61,16 @@ const isAuthError = (result: any) => {
     result?.error?.data?.message || result?.error?.data?.error || "",
   ).toLowerCase();
 
+  // Only session/auth expiry should trigger refresh+logout.
+  // 403 (forbidden) must not log the admin out.
   return (
     status === 401 ||
-    status === 403 ||
     dataStatus === 401 ||
-    dataStatus === 403 ||
     message.includes("unauthorized") ||
     message.includes("jwt expired") ||
     message.includes("token expired") ||
     message.includes("invalid token") ||
-    message.includes("access token")
+    message.includes("session expired")
   );
 };
 
