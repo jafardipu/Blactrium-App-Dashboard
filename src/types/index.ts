@@ -384,6 +384,78 @@ export type TReport = {
   } | null;
 };
 
+export type TAdminProductStatus = "active" | "inactive";
+
+export type TAdminProduct = {
+  _id: string;
+  productName: string;
+  productImage?: string | null;
+  productDescription?: string | null;
+  productCategory?: string | null;
+  priceDetails?: { price: number; currency: string } | null;
+  discount?: number;
+  shippingCost?: number;
+  stock?: number;
+  color?: string[];
+  size?: string[];
+  material?: string | null;
+  brand?: string | null;
+  condition?: string | null;
+  weight?: string | number | null;
+  dimensions?: string | null;
+  tags?: string[];
+  attributes?: Array<{ name: string; value: string }>;
+  location?: {
+    address?: string[];
+    city?: string | null;
+    state?: string | null;
+    country?: string | null;
+    zip?: string | null;
+    lat?: number | null;
+    lng?: number | null;
+  } | null;
+  status: TAdminProductStatus;
+  createdAt?: string;
+  updatedAt?: string;
+  merchantShopId?: {
+    _id: string;
+    shopName?: string;
+    logo?: string | null;
+  } | null;
+  businessProfileId?: {
+    _id: string;
+    businessName?: string;
+    status?: string;
+  } | null;
+  userId?: {
+    _id: string;
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    accountStatus?: string;
+  } | null;
+  category?: {
+    _id?: string | null;
+    name?: string | null;
+  } | null;
+  pricing?: {
+    originalPrice?: number;
+    discount?: number;
+    effectivePrice?: number;
+    currency?: string;
+  };
+  totalReviews?: number;
+  averageRating?: number;
+  stats?: {
+    favoritesCount?: number;
+    inCartsCount?: number;
+    ordersCount?: number;
+    openOrdersCount?: number;
+    unitsSold?: number;
+    revenue?: number;
+  };
+};
+
 export type TCommissionEarning = {
   id: string;
   productId: string;
@@ -459,6 +531,27 @@ export type TProductCategory = {
   updatedAt?: string;
 };
 
+export type TAdminSubscriptionStatus =
+  | "active"
+  | "trial"
+  | "grace_period"
+  | "billing_issue"
+  | "cancelled"
+  | "expired"
+  | null;
+
+export type TAdminUserSubscription = {
+  id: string;
+  status: Exclude<TAdminSubscriptionStatus, null> | string;
+  planName?: string | null;
+  planTier?: string | null;
+  isTrial?: boolean;
+  willRenew?: boolean;
+  platform?: string | null;
+  purchasedAt?: string | null;
+  expiresAt?: string | null;
+};
+
 export type TAdminUser = {
   _id: string;
   id: string;
@@ -469,10 +562,11 @@ export type TAdminUser = {
   joinDate: string;
   status: string;
   avatar?: string | null;
-  subscriptionStatus?: string | null;
+  subscriptionStatus?: TAdminSubscriptionStatus | string | null;
   planTier?: string | null;
   subscriptionExpiresAt?: string | null;
-  deactivationReason?: string | null;
+  deactivationReason?: "subscription_expired" | string | null;
+  deactivatedAt?: string | null;
 };
 
 export type TAdminProfile = {
@@ -559,6 +653,11 @@ export type TAdminUserDetails = {
   subscribeToEmails?: boolean;
   businessOwnerType?: string | null;
   dateOfJoin?: string;
+  subscriptionStatus?: TAdminSubscriptionStatus | string | null;
+  planTier?: string | null;
+  subscriptionExpiresAt?: string | null;
+  deactivationReason?: "subscription_expired" | string | null;
+  deactivatedAt?: string | null;
   country?: {
     id: string;
     name: string;
@@ -599,14 +698,5 @@ export type TAdminUserDetails = {
     cover?: string | null;
   } | null;
   merchant?: unknown;
-  subscription?: {
-    id: string;
-    status: string;
-    planName: string;
-    planTier?: string;
-    isTrial?: boolean;
-    platform?: string;
-    purchasedAt?: string;
-    expiresAt?: string;
-  } | null;
+  subscription?: TAdminUserSubscription | null;
 };

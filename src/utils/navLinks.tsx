@@ -1,7 +1,17 @@
 import { RiDashboardHorizontalFill } from "react-icons/ri";
 import { GoPeople } from "react-icons/go";
 import Link from "next/link";
-import { BellDot, ChartBarStacked, CircleAlert, Globe, Mail, SquareStack, Wallet } from "lucide-react";
+import {
+  BellDot,
+  ChartBarStacked,
+  CircleAlert,
+  Globe,
+  Mail,
+  Package,
+  ShoppingBag,
+  SquareStack,
+  Wallet,
+} from "lucide-react";
 import { IoSettingsOutline } from "react-icons/io5";
 
 export const navLinks = [
@@ -26,10 +36,16 @@ export const navLinks = [
     label: <Link href={"/admin/complains"}>Reviews</Link>,
   },
   {
+    key: "products",
+    icon: <Package size={16} />,
+    label: <Link href={"/admin/products"}>Products</Link>,
+  },
+  {
     key: "product_categories",
-    icon: <SquareStack size={18} />,
+    icon: <SquareStack size={16} />,
     label: <Link href={"/admin/product-categories"}>Product Categories</Link>,
   },
+
   {
     key: "category",
     icon: <ChartBarStacked size={18} />,

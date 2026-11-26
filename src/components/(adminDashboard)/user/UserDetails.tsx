@@ -16,6 +16,14 @@ type TPropsType = {
   userId?: string | null;
 };
 
+const formatStatusLabel = (status?: string | null) => {
+  if (!status) return "N/A";
+  return status
+    .split("_")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+};
+
 const DetailRow = ({
   label,
   value,
@@ -53,6 +61,13 @@ const UserDetails = ({ open, setOpen, userId }: TPropsType) => {
     `${user?.firstName ?? ""} ${user?.lastName ?? ""}`.trim() ||
     "Unknown User";
   const showAvatarImage = Boolean(user?.avatar) && !avatarError;
+  const isSubscriptionDeactivated =
+    user?.deactivationReason === "subscription_expired";
+  const subscription = user?.subscription ?? null;
+  const planTier = subscription?.planTier || user?.planTier || null;
+  const deactivatedAt = user?.deactivatedAt
+    ? moment(user.deactivatedAt).format("LL")
+    : null;
 
   useEffect(() => {
     setAvatarError(false);
@@ -99,6 +114,14 @@ const UserDetails = ({ open, setOpen, userId }: TPropsType) => {
           </div>
         ) : (
           <>
+            {isSubscriptionDeactivated ? (
+              <div className='mb-4 rounded-xl border border-[#FF484866] bg-[#FF48481A] px-3 py-3 text-sm text-[#FFB4B4]'>
+                Deactivated: their
+                {planTier ? ` ${planTier}` : ""} subscription expired
+                {deactivatedAt ? ` on ${deactivatedAt}` : ""}.
+              </div>
+            ) : null}
+
             <div className='w-fit mx-auto relative size-[150px]'>
               {showAvatarImage ? (
                 <Image
@@ -285,38 +308,59 @@ const UserDetails = ({ open, setOpen, userId }: TPropsType) => {
                 </>
               ) : null}
 
-              {user.subscription ? (
-                <>
-                  <div className='px-2 pt-4 pb-2'>
-                    <h3 className='text-lg font-semibold text-[#cad1d6]'>
-                      Subscription
-                    </h3>
-                  </div>
-                  <DetailRow
-                    label='Plan'
-                    value={user.subscription.planName}
-                    striped
-                  />
+              <div className='px-2 pt-4 pb-2'>
+                <h3 className='text-lg font-semibold text-[#cad1d6]'>Subscription</h3>
+              </div>
+
+              {!subscription ? (
+                <div className='rounded-xl border border-[#FFFFFF33]/[0.2] mx-2 mb-3 px-3 py-4 text-sm text-[#93A4B0]'>
+                  No subscription
+                  {isSubscriptionDeactivated && deactivatedAt
+                    ? ` · expired on ${deactivatedAt}`
+                    : ""}
+                </div>
+              ) : (
+                <div className='rounded-xl border border-[#FFFFFF33]/[0.2] mx-2 mb-3 overflow-hidden'>
                   <DetailRow
                     label='Status'
-                    value={user.subscription.status}
+                    value={formatStatusLabel(
+                      subscription.status || user.subscriptionStatus,
+                    )}
+                    striped
+                    valueClassName={cn(
+                      "capitalize",
+                      isSubscriptionDeactivated && "text-[#FF4848]",
+                    )}
+                  />
+                  <DetailRow
+                    label='Plan'
+                    value={subscription.planName || "N/A"}
+                  />
+                  <DetailRow
+                    label='Plan Tier'
+                    value={planTier || "N/A"}
+                    striped
                     valueClassName='capitalize'
                   />
                   <DetailRow
                     label='Platform'
-                    value={user.subscription.platform}
-                    striped
+                    value={subscription.platform || "N/A"}
                     valueClassName='capitalize'
                   />
                   <DetailRow
                     label='Trial'
-                    value={user.subscription.isTrial ? "Yes" : "No"}
+                    value={subscription.isTrial ? "Yes" : "No"}
+                    striped
+                  />
+                  <DetailRow
+                    label='Auto-renew'
+                    value={subscription.willRenew ? "Yes" : "No"}
                   />
                   <DetailRow
                     label='Purchased'
                     value={
-                      user.subscription.purchasedAt
-                        ? moment(user.subscription.purchasedAt).format("LL")
+                      subscription.purchasedAt
+                        ? moment(subscription.purchasedAt).format("LL")
                         : "N/A"
                     }
                     striped
@@ -324,13 +368,23 @@ const UserDetails = ({ open, setOpen, userId }: TPropsType) => {
                   <DetailRow
                     label='Expires'
                     value={
-                      user.subscription.expiresAt
-                        ? moment(user.subscription.expiresAt).format("LL")
-                        : "N/A"
+                      subscription.expiresAt
+                        ? moment(subscription.expiresAt).format("LL")
+                        : user.subscriptionExpiresAt
+                          ? moment(user.subscriptionExpiresAt).format("LL")
+                          : "N/A"
                     }
                   />
-                </>
-              ) : null}
+                  {isSubscriptionDeactivated ? (
+                    <DetailRow
+                      label='Deactivated'
+                      value={deactivatedAt || "N/A"}
+                      striped
+                      valueClassName='text-[#FF4848]'
+                    />
+                  ) : null}
+                </div>
+              )}
             </div>
           </>
         )}

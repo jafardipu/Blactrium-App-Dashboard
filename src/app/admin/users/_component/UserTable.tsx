@@ -1,6 +1,6 @@
 "use client";
 
-import { Empty, Input, Popconfirm, Skeleton, TableProps } from "antd";
+import { Empty, Input, Popconfirm, Select, Skeleton, TableProps } from "antd";
 import UserDetails from "@/components/(adminDashboard)/user/UserDetails";
 import UserAvatar from "@/components/shared/UserAvatar";
 import CopyableId from "@/components/shared/CopyableId";
@@ -28,6 +28,71 @@ type UserTableProps = {
   role: UserRole;
 };
 
+const SUBSCRIPTION_FILTERS = [
+  { value: "all", label: "All" },
+  { value: "active", label: "Active" },
+  { value: "trial", label: "Trial" },
+  { value: "expired", label: "Expired (deactivated)" },
+  { value: "cancelled", label: "Cancelled" },
+  { value: "billing_issue", label: "Billing issue" },
+  { value: "none", label: "No subscription" },
+] as const;
+
+const formatSubscriptionLabel = (status?: string | null) => {
+  if (!status) return null;
+  return status
+    .split("_")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+};
+
+const formatSubscriptionDate = (value?: string | null) =>
+  value ? moment(value).format("D MMM YYYY") : null;
+
+function SubscriptionCell({ user }: { user: TAdminUser }) {
+  const isDeactivated = user.deactivationReason === "subscription_expired";
+  const status = user.subscriptionStatus;
+  const expiresAt = formatSubscriptionDate(user.subscriptionExpiresAt);
+  const deactivatedAt = formatSubscriptionDate(user.deactivatedAt);
+
+  if (isDeactivated) {
+    return (
+      <div className='space-y-0.5'>
+        <p className='font-semibold text-[#FF4848]'>
+          Deactivated - subscription expired
+        </p>
+        {deactivatedAt ? (
+          <p className='text-xs text-[#93A4B0]'>Expired on {deactivatedAt}</p>
+        ) : null}
+      </div>
+    );
+  }
+
+  if (!status) {
+    return <span className='text-[#93A4B0]'>—</span>;
+  }
+
+  const label = formatSubscriptionLabel(status);
+  const isExpired = status === "expired";
+  const dateLine = expiresAt
+    ? isExpired
+      ? `Expired on ${expiresAt}`
+      : `Ends on ${expiresAt}`
+    : null;
+
+  return (
+    <div className='space-y-0.5'>
+      <p className='font-semibold text-white'>
+        {label}
+        {user.planTier ? (
+          <span className='font-normal text-[#93A4B0]'> · {user.planTier}</span>
+        ) : null}
+      </p>
+      {dateLine ? <p className='text-xs text-[#93A4B0]'>{dateLine}</p> : null}
+    </div>
+  );
+}
+
 const UserTable = ({ role }: UserTableProps) => {
   const [open, setOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
@@ -40,8 +105,15 @@ const UserTable = ({ role }: UserTableProps) => {
   const page = Number(searchParams.get("page") || 1);
   const limit = Number(searchParams.get("limit") || 10);
   const search = searchParams.get("search") || "";
+  const subscriptionStatusParam = searchParams.get("subscriptionStatus") || "all";
   const [searchValue, setSearchValue] = useState(search);
   const debouncedSearch = useDebounced({ value: searchValue, delay: 400 });
+
+  const subscriptionStatus = SUBSCRIPTION_FILTERS.some(
+    (item) => item.value === subscriptionStatusParam,
+  )
+    ? subscriptionStatusParam
+    : "all";
 
   useEffect(() => {
     setSearchValue(search);
@@ -65,6 +137,10 @@ const UserTable = ({ role }: UserTableProps) => {
 
   if (search) {
     queryParams.search = search;
+  }
+
+  if (subscriptionStatus !== "all") {
+    queryParams.subscriptionStatus = subscriptionStatus;
   }
 
   const { data, isLoading } = useGetUsersQuery(queryParams);
@@ -160,7 +236,12 @@ const UserTable = ({ role }: UserTableProps) => {
     {
       title: "Join Date",
       dataIndex: "joinDate",
-      render: (text) => <p>{moment(text).format("LL")}</p>,
+      render: (text) => <p>{text ? moment(text).format("LL") : "-"}</p>,
+    },
+    {
+      title: "Subscription",
+      dataIndex: "subscriptionStatus",
+      render: (_text, record) => <SubscriptionCell user={record} />,
     },
     {
       title: "Status",
@@ -260,17 +341,35 @@ const UserTable = ({ role }: UserTableProps) => {
 
   return (
     <div className='border border-[#FFFFFF33]/[0.2] rounded-t-xl'>
-      <div className='flex items-center justify-between py-2 px-2 gap-3'>
+      <div className='flex flex-col lg:flex-row lg:items-center justify-between py-2 px-2 gap-3'>
         <h4 className='text-xl font-semibold text-[#cad1d6]'>{title}</h4>
-        <Input.Search
-          placeholder='Search here'
-          size='large'
-          className='max-w-[300px]'
-          allowClear
-          value={searchValue}
-          onChange={(e) => setSearchValue(e.target.value)}
-          onSearch={(value) => setSearchValue(value)}
-        />
+        <div className='flex flex-col sm:flex-row items-stretch sm:items-center gap-3'>
+          <Select
+            size='large'
+            className='min-w-[220px]'
+            value={subscriptionStatus}
+            onChange={(value) =>
+              updateParams({
+                subscriptionStatus: value === "all" ? null : value,
+                page: "1",
+              })
+            }
+            options={SUBSCRIPTION_FILTERS.map((item) => ({
+              value: item.value,
+              label: item.label,
+            }))}
+            placeholder='Subscription'
+          />
+          <Input.Search
+            placeholder='Search here'
+            size='large'
+            className='max-w-[300px]'
+            allowClear
+            value={searchValue}
+            onChange={(e) => setSearchValue(e.target.value)}
+            onSearch={(value) => setSearchValue(value)}
+          />
+        </div>
       </div>
       <div className='rounded-2xl'>
         {isLoading ? (
